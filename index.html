@@ -121,7 +121,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <div class="nav">
     <button class="nav-btn active" onclick="showTab('registro',this)">Registro</button>
     <button class="nav-btn" onclick="showTab('stats',this)">Estadísticas</button>
-    <button class="nav-btn" onclick="showTab('rachas',this)">Rachas</button>
+    <button class="nav-btn" onclick="showTab('rachas',this)">Logros</button>
   </div>
 
   <div id="tab-registro" class="section active">
@@ -228,6 +228,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <div id="tab-rachas" class="section">
     <div class="card" id="rachasCard"></div>
+    <div class="card" id="recordsCard"></div>
     <div class="card" id="dietaResumen"></div>
   </div>
 </div>
@@ -401,19 +402,38 @@ function renderRachas() {
   for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].lacteos) lS++; else break; }
   for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].azucar) aS++; else break; }
   for (let i=keys.length-1;i>=0;i--) { if (data[keys[i]].dieta) dS++; else break; }
+
+  let maxPasos=null, maxPasosDate=null, maxKm=null, maxKmDate=null;
   keys.forEach(k => {
     if (k>=d30start&&k<=today) {
       total30++;
       const d=data[k];
       if(d.gluten)g30++; if(d.lacteos)l30++; if(d.azucar)a30++; if(d.dieta)d30++;
     }
+    const d=data[k];
+    if(d.pasos && (maxPasos===null || d.pasos>maxPasos)) { maxPasos=d.pasos; maxPasosDate=k; }
+    if(d.km && (maxKm===null || d.km>maxKm)) { maxKm=d.km; maxKmDate=k; }
   });
+
   const pct = n => total30>0 ? Math.round((n/total30)*100) : 0;
+  const fmtDate = k => k ? new Date(k+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}) : '—';
+
   document.getElementById('rachasCard').innerHTML = `<div class="card-title">Rachas activas</div>
     <div class="streak-row"><span class="streak-name">Sin gluten</span><span class="streak-val ${gS>6?'good':''}">${gS} días</span></div>
     <div class="streak-row"><span class="streak-name">Sin lácteos</span><span class="streak-val ${lS>6?'good':''}">${lS} días</span></div>
     <div class="streak-row"><span class="streak-name">Sin azúcar</span><span class="streak-val ${aS>6?'good':''}">${aS} días</span></div>
     <div class="streak-row"><span class="streak-name">Dieta respetada</span><span class="streak-val ${dS>6?'good':''}">${dS} días consecutivos</span></div>`;
+
+  document.getElementById('recordsCard').innerHTML = `<div class="card-title">Récords personales</div>
+    <div class="streak-row">
+      <div><span class="streak-name">Más pasos en un día</span><div style="font-size:12px;color:#999;margin-top:2px">${fmtDate(maxPasosDate)}</div></div>
+      <span class="streak-val good">${maxPasos ? maxPasos.toLocaleString('es-ES') : '—'}</span>
+    </div>
+    <div class="streak-row">
+      <div><span class="streak-name">Más km en un día</span><div style="font-size:12px;color:#999;margin-top:2px">${fmtDate(maxKmDate)}</div></div>
+      <span class="streak-val good">${maxKm ? maxKm.toFixed(1) + ' km' : '—'}</span>
+    </div>`;
+
   document.getElementById('dietaResumen').innerHTML = `<div class="card-title">Resumen dieta (últimos 30 días)</div>
     <div class="streak-row"><span class="streak-name">Días con gluten</span><span class="streak-val">${g30} / ${total30} · ${pct(g30)}%</span></div>
     <div class="streak-row"><span class="streak-name">Días con lácteos</span><span class="streak-val">${l30} / ${total30} · ${pct(l30)}%</span></div>
