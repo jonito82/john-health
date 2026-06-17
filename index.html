@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="John Health">
+<meta name="theme-color" content="#ffffff">
+<title>John Health</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+.app { max-width: 480px; margin: 0 auto; padding: 0 0 90px; min-height: 100vh; background: #f5f5f5; }
+.header { padding: 56px 16px 14px; background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.header h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+.date-nav { display: flex; align-items: center; gap: 4px; }
+.date-btn { background: none; border: none; cursor: pointer; color: #888; font-size: 22px; padding: 4px 10px; line-height: 1; }
+.date-label { font-size: 13px; color: #666; min-width: 118px; text-align: center; }
+.nav { display: flex; background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); position: sticky; top: 91px; z-index: 9; }
+.nav-btn { flex: 1; padding: 13px 0; font-size: 13px; color: #888; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; }
+.nav-btn.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 600; }
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+.card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+.card-title { font-size: 11px; color: #999; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.metric-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.metric-row:last-child { margin-bottom: 0; }
+.metric-label { font-size: 15px; color: #1a1a1a; flex: 1; }
+.metric-input { width: 100px; text-align: right; border: 1px solid #e0e0e0; border-radius: 10px; padding: 8px 10px; font-size: 16px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; }
+.metric-input:focus { border-color: #007AFF; background: #fff; }
+.metric-unit { font-size: 13px; color: #999; width: 32px; }
+.toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.toggle-item { display: flex; align-items: center; justify-content: space-between; background: #fafafa; border-radius: 10px; padding: 12px 14px; border: 1px solid #e8e8e8; cursor: pointer; transition: all 0.15s; }
+.toggle-item.on-bad { background: #fff2f2; border-color: #ffcdd2; }
+.toggle-item.on-bad .toggle-label { color: #d32f2f; }
+.toggle-item.on-bad .toggle-dot { background: #d32f2f; }
+.toggle-item.on-good { background: #f0faf4; border-color: #b2dfcc; }
+.toggle-item.on-good .toggle-label { color: #1a7a4a; }
+.toggle-item.on-good .toggle-dot { background: #1a7a4a; }
+.toggle-label { font-size: 14px; color: #666; }
+.toggle-dot { width: 9px; height: 9px; border-radius: 50%; background: #ccc; transition: background 0.15s; }
+.fast-display { text-align: center; padding: 6px 0 4px; }
+.fast-hours { font-size: 42px; font-weight: 300; color: #1a1a1a; line-height: 1; letter-spacing: -1px; }
+.fast-sub { font-size: 13px; color: #999; margin-top: 4px; }
+.fast-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.fast-field { display: flex; flex-direction: column; gap: 5px; }
+.fast-field label { font-size: 12px; color: #999; font-weight: 500; }
+.fast-field input { border: 1px solid #e0e0e0; border-radius: 10px; padding: 9px 10px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; width: 100%; }
+.fast-field input:focus { border-color: #007AFF; background: #fff; }
+.save-btn { width: 100%; padding: 15px; background: #1a1a1a; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 4px; transition: opacity 0.15s; }
+.save-btn:active { opacity: 0.75; }
+.saved-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 11px 22px; border-radius: 22px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; white-space: nowrap; }
+.saved-toast.show { opacity: 1; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.stat-card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+.stat-label { font-size: 11px; color: #999; margin-bottom: 5px; font-weight: 500; }
+.stat-val { font-size: 24px; font-weight: 600; color: #1a1a1a; line-height: 1; }
+.stat-val span { font-size: 14px; font-weight: 400; color: #999; }
+.stat-sub { font-size: 11px; color: #bbb; margin-top: 3px; }
+.chart-wrap { position: relative; width: 100%; height: 180px; }
+.period-sel { display: flex; gap: 6px; margin-bottom: 12px; }
+.period-btn { padding: 6px 14px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 13px; background: #fff; cursor: pointer; color: #666; font-family: inherit; font-weight: 500; }
+.period-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.notes-input { width: 100%; border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; resize: none; height: 76px; outline: none; }
+.notes-input:focus { border-color: #007AFF; background: #fff; }
+.streak-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
+.streak-row:last-child { border-bottom: none; }
+.streak-name { font-size: 14px; color: #1a1a1a; }
+.streak-val { font-size: 14px; font-weight: 600; color: #999; }
+.streak-val.good { color: #1a7a4a; }
+.legend { display: flex; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #999; }
+.legend-dot { width: 10px; height: 3px; border-radius: 2px; }
+@media (prefers-color-scheme: dark) {
+  body, .app { background: #111; color: #f0f0f0; }
+  .header, .nav { background: #1c1c1e; border-color: rgba(255,255,255,0.08); }
+  .header h1 { color: #f0f0f0; }
+  .date-label { color: #aaa; }
+  .date-btn { color: #aaa; }
+  .nav-btn { color: #666; }
+  .nav-btn.active { color: #f0f0f0; border-bottom-color: #f0f0f0; }
+  .card, .stat-card { background: #1c1c1e; box-shadow: none; border: 0.5px solid rgba(255,255,255,0.06); }
+  .card-title, .stat-label { color: #666; }
+  .metric-label, .streak-name { color: #f0f0f0; }
+  .metric-input, .fast-field input, .notes-input { background: #2c2c2e; border-color: rgba(255,255,255,0.1); color: #f0f0f0; }
+  .metric-unit, .fast-sub, .stat-sub { color: #666; }
+  .toggle-item { background: #2c2c2e; border-color: rgba(255,255,255,0.08); }
+  .toggle-label { color: #aaa; }
+  .toggle-dot { background: #444; }
+  .toggle-item.on-bad { background: #2d1a1a; border-color: #5a2020; }
+  .toggle-item.on-bad .toggle-label { color: #ff6b6b; }
+  .toggle-item.on-bad .toggle-dot { background: #ff6b6b; }
+  .toggle-item.on-good { background: #1a2d22; border-color: #1a4a30; }
+  .toggle-item.on-good .toggle-label { color: #4caf7d; }
+  .toggle-item.on-good .toggle-dot { background: #4caf7d; }
+  .fast-hours, .stat-val { color: #f0f0f0; }
+  .save-btn { background: #f0f0f0; color: #1a1a1a; }
+  .saved-toast { background: #f0f0f0; color: #1a1a1a; }
+  .period-btn { background: #2c2c2e; border-color: rgba(255,255,255,0.1); color: #aaa; }
+  .period-btn.active { background: #f0f0f0; color: #1a1a1a; border-color: #f0f0f0; }
+  .streak-row { border-color: rgba(255,255,255,0.06); }
+  .streak-val { color: #666; }
+  .streak-val.good { color: #4caf7d; }
+  .stat-val span { color: #666; }
+  .legend-item { color: #666; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>John Health</h1>
+    <div class="date-nav">
+      <button class="date-btn" onclick="changeDay(-1)">‹</button>
+      <span class="date-label" id="dateLabel"></span>
+      <button class="date-btn" onclick="changeDay(1)">›</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('registro',this)">Registro</button>
+    <button class="nav-btn" onclick="showTab('stats',this)">Estadísticas</button>
+    <button class="nav-btn" onclick="showTab('rachas',this)">Rachas</button>
+  </div>
+
+  <div id="tab-registro" class="section active">
+    <div class="card">
+      <div class="card-title">Cuerpo</div>
+      <div class="metric-row">
+        <span class="metric-label">Peso</span>
+        <input class="metric-input" type="number" step="0.1" inputmode="decimal" id="peso" placeholder="—">
+        <span class="metric-unit">kg</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Actividad</div>
+      <div class="metric-row">
+        <span class="metric-label">Pasos</span>
+        <input class="metric-input" type="number" inputmode="numeric" id="pasos" placeholder="—">
+        <span class="metric-unit">pasos</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Distancia</span>
+        <input class="metric-input" type="number" step="0.1" inputmode="decimal" id="km" placeholder="—">
+        <span class="metric-unit">km</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ayuno</div>
+      <div class="fast-display">
+        <div class="fast-hours" id="fastHours">— h</div>
+        <div class="fast-sub">horas de ayuno</div>
+      </div>
+      <div class="fast-inputs">
+        <div class="fast-field">
+          <label>Última comida</label>
+          <input type="time" id="lastMeal" value="19:00">
+        </div>
+        <div class="fast-field">
+          <label>Primera comida hoy</label>
+          <input type="time" id="firstMeal" value="19:00">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">¿Has tomado…?</div>
+      <div class="toggle-grid">
+        <div class="toggle-item" id="tog-gluten" onclick="toggleItem('gluten')">
+          <span class="toggle-label">Gluten</span>
+          <span class="toggle-dot"></span>
+        </div>
+        <div class="toggle-item" id="tog-lacteos" onclick="toggleItem('lacteos')">
+          <span class="toggle-label">Lácteos</span>
+          <span class="toggle-dot"></span>
+        </div>
+        <div class="toggle-item" id="tog-azucar" onclick="toggleItem('azucar')">
+          <span class="toggle-label">Azúcar</span>
+          <span class="toggle-dot"></span>
+        </div>
+        <div class="toggle-item on-good" id="tog-dieta" onclick="toggleItem('dieta')">
+          <span class="toggle-label">Dieta OK</span>
+          <span class="toggle-dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Notas</div>
+      <textarea class="notes-input" id="notas" placeholder="Cómo te has sentido, algo destacable…"></textarea>
+    </div>
+
+    <button class="save-btn" onclick="saveDay()">Guardar</button>
+  </div>
+
+  <div id="tab-stats" class="section">
+    <div class="period-sel">
+      <button class="period-btn active" onclick="setPeriod(7,this)">7 días</button>
+      <button class="period-btn" onclick="setPeriod(30,this)">30 días</button>
+      <button class="period-btn" onclick="setPeriod(90,this)">3 meses</button>
+    </div>
+    <div class="stats-grid" id="statsCards"></div>
+    <div class="card">
+      <div class="card-title">Evolución del peso</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#378ADD;height:2px"></span>Peso</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#E24B4A;height:2px;border-top:2px dashed #E24B4A;background:none;width:14px"></span>Media 7d</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;height:2px;border-top:2px dashed #1D9E75;background:none;width:14px"></span>Media 30d</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chartPeso" role="img" aria-label="Evolución del peso"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pasos diarios</div>
+      <div class="chart-wrap"><canvas id="chartPasos" role="img" aria-label="Pasos diarios"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Km caminados</div>
+      <div class="chart-wrap"><canvas id="chartKm" role="img" aria-label="Km caminados"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Horas de ayuno</div>
+      <div class="chart-wrap"><canvas id="chartAyuno" role="img" aria-label="Horas de ayuno"></canvas></div>
+    </div>
+  </div>
+
+  <div id="tab-rachas" class="section">
+    <div class="card" id="rachasCard"></div>
+    <div class="card" id="dietaResumen"></div>
+  </div>
+</div>
+
+<div class="saved-toast" id="toast">✓ Guardado</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let currentDate = new Date();
+let currentPeriod = 7;
+let toggles = { gluten: false, lacteos: false, azucar: false, dieta: true };
+let charts = {};
+
+function dateKey(d) { return d.toISOString().split('T')[0]; }
+function loadData() { try { return JSON.parse(localStorage.getItem('johnHealth') || '{}'); } catch(e) { return {}; } }
+function saveData(data) { localStorage.setItem('johnHealth', JSON.stringify(data)); }
+
+function formatDateLabel(d) {
+  const today = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  if (dateKey(d) === dateKey(today)) return 'Hoy · ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  if (dateKey(d) === dateKey(yesterday)) return 'Ayer · ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+}
+
+function changeDay(delta) {
+  currentDate = new Date(currentDate);
+  currentDate.setDate(currentDate.getDate() + delta);
+  loadDay(); updateDateLabel();
+}
+
+function updateDateLabel() { document.getElementById('dateLabel').textContent = formatDateLabel(currentDate); }
+
+function calcFast() {
+  const lm = document.getElementById('lastMeal').value;
+  const fm = document.getElementById('firstMeal').value;
+  if (!lm || !fm) { document.getElementById('fastHours').textContent = '— h'; return; }
+  const [lh,lmin] = lm.split(':').map(Number);
+  const [fh,fmin] = fm.split(':').map(Number);
+  let diff = (fh*60+fmin)-(lh*60+lmin);
+  if (diff <= 0) diff += 1440;
+  const h = Math.floor(diff/60), m = diff%60;
+  document.getElementById('fastHours').textContent = h + (m > 0 ? ':' + String(m).padStart(2,'0') : '') + ' h';
+}
+
+document.getElementById('lastMeal').addEventListener('change', calcFast);
+document.getElementById('firstMeal').addEventListener('change', calcFast);
+
+function applyToggleStyle(key, val) {
+  const el = document.getElementById('tog-'+key);
+  el.classList.remove('on-bad','on-good');
+  if (key === 'dieta') { if (val) el.classList.add('on-good'); }
+  else { if (val) el.classList.add('on-bad'); }
+  const dot = el.querySelector('.toggle-dot');
+  dot.style.background = '';
+}
+
+function toggleItem(key) {
+  toggles[key] = !toggles[key];
+  applyToggleStyle(key, toggles[key]);
+}
+
+function loadDay() {
+  const data = loadData();
+  const key = dateKey(currentDate);
+  const day = data[key] || {};
+  document.getElementById('peso').value = day.peso || '';
+  document.getElementById('pasos').value = day.pasos || '';
+  document.getElementById('km').value = day.km || '';
+  document.getElementById('lastMeal').value = day.lastMeal || '19:00';
+  document.getElementById('firstMeal').value = day.firstMeal || '19:00';
+  document.getElementById('notas').value = day.notas || '';
+  toggles = { gluten: day.gluten||false, lacteos: day.lacteos||false, azucar: day.azucar||false, dieta: day.dieta !== undefined ? day.dieta : true };
+  ['gluten','lacteos','azucar','dieta'].forEach(k => applyToggleStyle(k, toggles[k]));
+  calcFast();
+}
+
+function saveDay() {
+  const data = loadData();
+  const key = dateKey(currentDate);
+  const lm = document.getElementById('lastMeal').value;
+  const fm = document.getElementById('firstMeal').value;
+  let fastH = null;
+  if (lm && fm) {
+    const [lh,lmin] = lm.split(':').map(Number);
+    const [fh,fmin] = fm.split(':').map(Number);
+    let diff = (fh*60+fmin)-(lh*60+lmin);
+    if (diff <= 0) diff += 1440;
+    fastH = parseFloat((diff/60).toFixed(1));
+  }
+  data[key] = {
+    peso: parseFloat(document.getElementById('peso').value)||null,
+    pasos: parseInt(document.getElementById('pasos').value)||null,
+    km: parseFloat(document.getElementById('km').value)||null,
+    lastMeal: lm, firstMeal: fm, fastH,
+    gluten: toggles.gluten, lacteos: toggles.lacteos, azucar: toggles.azucar, dieta: toggles.dieta,
+    notas: document.getElementById('notas').value
+  };
+  saveData(data);
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function getPeriodDates(n) {
+  const dates = [];
+  for (let i = n-1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate()-i); dates.push(dateKey(d)); }
+  return dates;
+}
+
+function movingAvg(arr, w) {
+  return arr.map((v,i) => {
+    const slice = arr.slice(Math.max(0,i-w+1),i+1).filter(x=>x!==null);
+    return slice.length ? parseFloat((slice.reduce((a,b)=>a+b,0)/slice.length).toFixed(1)) : null;
+  });
+}
+
+function setPeriod(n, btn) {
+  currentPeriod = n;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStats();
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderStats() {
+  const data = loadData();
+  const dates = getPeriodDates(currentPeriod);
+  const labels = dates.map(d => new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
+  const pesoArr = dates.map(d => data[d]?.peso||null);
+  const pasosArr = dates.map(d => data[d]?.pasos||null);
+  const kmArr = dates.map(d => data[d]?.km||null);
+  const ayunoArr = dates.map(d => data[d]?.fastH||null);
+  const avg = arr => { const v=arr.filter(x=>x!==null); return v.length ? parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)) : null; };
+  const pesoMA7 = movingAvg(pesoArr,7);
+  const pesoMA30 = movingAvg(pesoArr,30);
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const textCol = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
+  const gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+
+  document.getElementById('statsCards').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Peso medio</div><div class="stat-val">${avg(pesoArr)||'—'} <span>kg</span></div><div class="stat-sub">últimos ${currentPeriod}d</div></div>
+    <div class="stat-card"><div class="stat-label">Pasos medios</div><div class="stat-val">${avg(pasosArr)?.toLocaleString('es-ES')||'—'}</div><div class="stat-sub">últimos ${currentPeriod}d</div></div>
+    <div class="stat-card"><div class="stat-label">Ayuno medio</div><div class="stat-val">${avg(ayunoArr)||'—'} <span>h</span></div><div class="stat-sub">últimos ${currentPeriod}d</div></div>
+    <div class="stat-card"><div class="stat-label">Km medios</div><div class="stat-val">${avg(kmArr)||'—'} <span>km</span></div><div class="stat-sub">últimos ${currentPeriod}d</div></div>`;
+
+  const baseOpts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{backgroundColor:isDark?'#2a2a2a':'#fff',titleColor:isDark?'#f0f0f0':'#1a1a1a',bodyColor:isDark?'#aaa':'#555',borderColor:isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.08)',borderWidth:1,padding:10,cornerRadius:8} }, scales:{ x:{ticks:{color:textCol,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:7},grid:{color:gridCol},border:{display:false}}, y:{ticks:{color:textCol,font:{size:10}},grid:{color:gridCol},border:{display:false}} } };
+
+  destroyChart('chartPeso');
+  charts['chartPeso'] = new Chart(document.getElementById('chartPeso'), { type:'line', data:{ labels, datasets:[ {label:'Peso',data:pesoArr,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',pointRadius:3,pointBackgroundColor:'#378ADD',tension:0.35,spanGaps:true,fill:true}, {label:'Media 7d',data:pesoMA7,borderColor:'#E24B4A',borderDash:[5,3],pointRadius:0,tension:0.4,spanGaps:true,borderWidth:1.5}, {label:'Media 30d',data:pesoMA30,borderColor:'#1D9E75',borderDash:[2,4],pointRadius:0,tension:0.4,spanGaps:true,borderWidth:1.5} ]}, options:{...baseOpts} });
+
+  destroyChart('chartPasos');
+  charts['chartPasos'] = new Chart(document.getElementById('chartPasos'), { type:'bar', data:{ labels, datasets:[{label:'Pasos',data:pasosArr,backgroundColor:'rgba(55,138,221,0.55)',borderRadius:4,borderSkipped:false}]}, options:{...baseOpts} });
+
+  destroyChart('chartKm');
+  charts['chartKm'] = new Chart(document.getElementById('chartKm'), { type:'bar', data:{ labels, datasets:[{label:'Km',data:kmArr,backgroundColor:'rgba(186,117,23,0.55)',borderRadius:4,borderSkipped:false}]}, options:{...baseOpts} });
+
+  destroyChart('chartAyuno');
+  charts['chartAyuno'] = new Chart(document.getElementById('chartAyuno'), { type:'bar', data:{ labels, datasets:[{label:'Ayuno (h)',data:ayunoArr,backgroundColor:'rgba(29,158,117,0.55)',borderRadius:4,borderSkipped:false}]}, options:{...baseOpts} });
+}
+
+function renderRachas() {
+  const data = loadData();
+  const keys = Object.keys(data).sort();
+  let gS=0,lS=0,aS=0,dS=0;
+  let g30=0,l30=0,a30=0,d30=0,total30=0;
+  const today = dateKey(new Date());
+  const d30start = dateKey(new Date(Date.now()-29*864e5));
+  for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].gluten) gS++; else break; }
+  for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].lacteos) lS++; else break; }
+  for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].azucar) aS++; else break; }
+  for (let i=keys.length-1;i>=0;i--) { if (data[keys[i]].dieta) dS++; else break; }
+  keys.forEach(k => {
+    if (k>=d30start&&k<=today) {
+      total30++;
+      const d=data[k];
+      if(d.gluten)g30++; if(d.lacteos)l30++; if(d.azucar)a30++; if(d.dieta)d30++;
+    }
+  });
+  const pct = n => total30>0 ? Math.round((n/total30)*100) : 0;
+  document.getElementById('rachasCard').innerHTML = `<div class="card-title">Rachas activas</div>
+    <div class="streak-row"><span class="streak-name">Sin gluten</span><span class="streak-val ${gS>6?'good':''}">${gS} días</span></div>
+    <div class="streak-row"><span class="streak-name">Sin lácteos</span><span class="streak-val ${lS>6?'good':''}">${lS} días</span></div>
+    <div class="streak-row"><span class="streak-name">Sin azúcar</span><span class="streak-val ${aS>6?'good':''}">${aS} días</span></div>
+    <div class="streak-row"><span class="streak-name">Dieta respetada</span><span class="streak-val ${dS>6?'good':''}">${dS} días consecutivos</span></div>`;
+  document.getElementById('dietaResumen').innerHTML = `<div class="card-title">Resumen dieta (últimos 30 días)</div>
+    <div class="streak-row"><span class="streak-name">Días con gluten</span><span class="streak-val">${g30} / ${total30} · ${pct(g30)}%</span></div>
+    <div class="streak-row"><span class="streak-name">Días con lácteos</span><span class="streak-val">${l30} / ${total30} · ${pct(l30)}%</span></div>
+    <div class="streak-row"><span class="streak-name">Días con azúcar</span><span class="streak-val">${a30} / ${total30} · ${pct(a30)}%</span></div>
+    <div class="streak-row"><span class="streak-name">Dieta OK</span><span class="streak-val good">${d30} / ${total30} · ${pct(d30)}%</span></div>`;
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab==='stats') renderStats();
+  if (tab==='rachas') renderRachas();
+}
+
+updateDateLabel();
+loadDay();
+</script>
+</body>
+</html>
