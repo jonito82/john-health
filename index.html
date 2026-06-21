@@ -251,7 +251,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI'
     </div>
 
     <div class="card">
-      <div class="card-title">Actividades hoy <span class="garmin-badge">GARMIN</span></div>
+      <div class="card-title" id="actividadesDayTitle">Actividades hoy <span class="garmin-badge">GARMIN</span></div>
       <div class="activity-list" id="todayActivities">
         <div style="font-size:13px;color:var(--text3);padding:4px 0">Sin actividades registradas hoy</div>
       </div>
@@ -757,11 +757,11 @@ function activityItemHTML(a) {
 }
 
 function renderTodayActivities() {
-  const todayKey = dateKey(new Date());
-  const acts = getAllActivities().filter(a => a.date === todayKey);
+  const key = dateKey(currentDate);
+  const acts = getAllActivities().filter(a => a.date === key);
   const el = document.getElementById('todayActivities');
   if (!el) return;
-  if (!acts.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">Sin actividades registradas hoy</div>'; return; }
+  if (!acts.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">Sin actividades registradas este día</div>'; return; }
   el.innerHTML = acts.map(activityItemHTML).join('');
 }
 renderTodayActivities();
@@ -931,6 +931,13 @@ function loadDay() {
   missedSupps = new Set(day.missedSupps||[]);
   renderSupps();
   renderWeekSummary();
+  // Update activities title and list for selected day
+  const titleEl = document.getElementById('actividadesDayTitle');
+  if (titleEl) {
+    const isToday = dateKey(currentDate) === dateKey(new Date());
+    titleEl.innerHTML = (isToday ? 'Actividades hoy' : 'Actividades · ' + currentDate.toLocaleDateString('es-ES',{day:'numeric',month:'short'})) + ' <span class="garmin-badge">GARMIN</span>';
+  }
+  renderTodayActivities();
 }
 loadDay();
 
