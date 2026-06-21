@@ -273,6 +273,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="pbtn active" onclick="setPeriod(7,this)">7d</button>
       <button class="pbtn" onclick="setPeriod(30,this)">30d</button>
       <button class="pbtn" onclick="setPeriod(90,this)">3m</button>
+      <button class="pbtn" onclick="setPeriodYear(this)">Año</button>
     </div>
     <div class="sgrid" id="statsCards"></div>
     <div class="card">
@@ -522,7 +523,7 @@ function renderResumenSemana(){
     // pasos y km de actividades Garmin
     const acts = GARMIN.acts.filter(a=>a.fecha===k);
     const pasosDay = acts.reduce((s,a)=>s+(a.pasos||0),0);
-    const kmDay = acts.reduce((s,a)=>s+(a.distancia||0),0);
+    const kmDay = acts.reduce((s,a)=>s+(+a.dist||0),0);
     if(pasosDay) pasos.push(pasosDay);
     if(kmDay) kms.push(parseFloat(kmDay.toFixed(2)));
     if(d?.fastH) ayunos.push(d.fastH);
@@ -832,8 +833,18 @@ function renderActividades(){
 // ════════════════════════════════════════════
 // RENDER ESTADÍSTICAS
 // ════════════════════════════════════════════
-function getPeriodDates(n){const d=[];for(let i=n-1;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(dk(x));}return d;}
+function getPeriodDates(n){
+  if(n==='year'){
+    const start=new Date(new Date().getFullYear(),0,1);
+    const d=[];
+    const today=new Date();
+    for(let dt=new Date(start);dt<=today;dt.setDate(dt.getDate()+1)) d.push(dk(new Date(dt)));
+    return d;
+  }
+  const d=[];for(let i=n-1;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(dk(x));}return d;
+}
 function setPeriod(n,btn){currentPeriod=n;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderStats();}
+function setPeriodYear(btn){currentPeriod='year';document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderStats();}
 
 function renderStats(){
   const data=ld(), dates=getPeriodDates(currentPeriod);
@@ -849,13 +860,21 @@ function renderStats(){
   const avg=arr=>{const v=arr.filter(x=>x!=null);return v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):null;};
 
   const fcActual=GARMIN.fcReposo[GARMIN.fcReposo.length-1];
-  const pasosUlt=GARMIN.pasosSemanales[GARMIN.pasosSemanales.length-1].v;
+
+  // Pasos del período: sumar actividades Garmin dentro del rango
+  const stored2=ld();
+  const storedActs2=Object.entries(stored2).flatMap(([fecha,day])=>(day.actividades||[]).map(a=>({...a,fecha})));
+  const allActsPeriod=[...GARMIN.acts,...storedActs2].filter(a=>dates.includes(a.fecha));
+  const totalPasosPeriod=allActsPeriod.reduce((s,a)=>s+(+a.pasos||0),0);
+  const totalKmPeriod=allActsPeriod.reduce((s,a)=>s+(+a.dist||0),0);
+  const nActsPeriod=allActsPeriod.length;
+  const periodLabel=currentPeriod==='year'?'año '+new Date().getFullYear():'últimos '+currentPeriod+'d';
 
   document.getElementById('statsCards').innerHTML=`
-    <div class="scard"><div class="slbl">Peso medio</div><div class="sval">${avg(pesoArr)||'—'}<span> kg</span></div><div class="ssub">últimos ${currentPeriod}d</div></div>
+    <div class="scard"><div class="slbl">Peso medio</div><div class="sval">${avg(pesoArr)||'—'}<span> kg</span></div><div class="ssub">${periodLabel}</div></div>
     <div class="scard"><div class="slbl">FC reposo actual</div><div class="sval">${fcActual}<span> ppm</span></div><div class="ssub">semana 15 Jun</div></div>
-    <div class="scard"><div class="slbl">Pasos últ. semana</div><div class="sval">${(pasosUlt/1000).toFixed(1)}<span>k</span></div><div class="ssub">sem. 15 Jun</div></div>
-    <div class="scard"><div class="slbl">Actividades (mes)</div><div class="sval">20</div><div class="ssub">jun 2026</div></div>`;
+    <div class="scard"><div class="slbl">Pasos ${periodLabel}</div><div class="sval">${totalPasosPeriod>0?(totalPasosPeriod/1000).toFixed(1)+'<span>k</span>':'—'}</div><div class="ssub">${nActsPeriod} actividades</div></div>
+    <div class="scard"><div class="slbl">Km ${periodLabel}</div><div class="sval">${totalKmPeriod>0?totalKmPeriod.toFixed(1):'—'}<span> km</span></div><div class="ssub">${nActsPeriod} actividades</div></div>`;
 
   dc('cPeso');
   charts['cPeso']=new Chart(document.getElementById('cPeso'),{type:'line',data:{labels:lbs,datasets:[
