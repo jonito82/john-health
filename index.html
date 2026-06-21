@@ -190,15 +190,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </div>
 
-    <div class="card">
-      <div class="ctitle">Añadir actividad Garmin</div>
-      <div style="display:flex;align-items:center;gap:12px;padding:8px 0 4px">
-        <span style="font-size:28px">📷</span>
-        <div>
-          <div style="font-size:14px;font-weight:600;color:var(--t1)">Envía las capturas al chat</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px">Abre un nuevo chat · escribe "nueva actividad" · adjunta 1-2 fotos de Garmin Connect</div>
-        </div>
-      </div>
+    <div class="card" id="resumenSemana">
+      <div class="ctitle">Esta semana</div>
+      <div id="resumenGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px"></div>
     </div>
 
     <div class="card">
@@ -514,6 +508,47 @@ function renderActDay(){
 // ════════════════════════════════════════════
 // LOAD / SAVE DAY
 // ════════════════════════════════════════════
+function renderResumenSemana(){
+  const data = ld();
+  const hoy = new Date();
+  const dias = [];
+  for(let i=6;i>=0;i--){ const d=new Date(hoy); d.setDate(hoy.getDate()-i); dias.push(dateKey(d)); }
+
+  const pesos=[], pasos=[], kms=[], ayunos=[];
+  dias.forEach(k=>{
+    const d=data[k];
+    const pesoRef = d?.peso || PESO_2026.find(p=>p.f===k)?.v || null;
+    if(pesoRef) pesos.push(pesoRef);
+    // pasos y km de actividades Garmin
+    const acts = GARMIN.acts.filter(a=>a.fecha===k);
+    const pasosDay = acts.reduce((s,a)=>s+(a.pasos||0),0);
+    const kmDay = acts.reduce((s,a)=>s+(a.distancia||0),0);
+    if(pasosDay) pasos.push(pasosDay);
+    if(kmDay) kms.push(parseFloat(kmDay.toFixed(2)));
+    if(d?.fastH) ayunos.push(d.fastH);
+  });
+
+  const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const ultimoPeso = pesos.length ? pesos[pesos.length-1] : null;
+  const mediaPeso = avg(pesos);
+  const totalPasos = pasos.reduce((a,b)=>a+b,0);
+  const mediaKm = avg(kms);
+  const mediaAyuno = avg(ayunos);
+
+  const stat = (label, val, unit, sub) => `
+    <div style="background:var(--ibg);border-radius:12px;padding:12px 14px">
+      <div style="font-size:11px;color:var(--t3);font-weight:500;margin-bottom:4px">${label}</div>
+      <div style="font-size:22px;font-weight:700;color:var(--t1);line-height:1">${val!==null?val:'—'}<span style="font-size:13px;font-weight:400;color:var(--t3)"> ${val!==null?unit:''}</span></div>
+      ${sub?`<div style="font-size:11px;color:var(--t3);margin-top:2px">${sub}</div>`:''}
+    </div>`;
+
+  document.getElementById('resumenGrid').innerHTML =
+    stat('Último peso', ultimoPeso, 'kg', mediaPeso ? `media ${mediaPeso.toFixed(1)} kg` : '') +
+    stat('Pasos semana', totalPasos ? totalPasos.toLocaleString('es-ES') : null, 'pasos', pasos.length ? `${pasos.length} días con actividad` : '') +
+    stat('Km medios/día', mediaKm ? mediaKm.toFixed(1) : null, 'km', kms.length ? `${kms.length} actividades` : '') +
+    stat('Ayuno medio', mediaAyuno ? mediaAyuno.toFixed(1) : null, 'h', ayunos.length ? `${ayunos.length} registros` : '');
+}
+
 function loadDay(){
   const data=ld(), key=dk(currentDate), day=data[key]||{};
   document.getElementById('peso').value=day.peso||'';
@@ -532,7 +567,7 @@ function saveDay(){
   if(p) data[key].peso=p; else delete data[key].peso;
   data[key].carnivore=carnivoreOn;
   data[key].notas=document.getElementById('notas').value;
-  sd(data); toast();
+  sd(data); toast(); renderResumenSemana();
 }
 function exportJSON(){
   const data=ld();
@@ -911,6 +946,7 @@ function showTab(tab,btn){
 
 setupProxy();
 document.getElementById('dateLabel').textContent=fmtDate(currentDate);
+renderResumenSemana();
 loadDay();
 </script>
 </body>
