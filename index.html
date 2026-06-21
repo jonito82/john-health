@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="John Health">
+<meta name="theme-color" content="#ffffff">
+<title>John Health</title>
+<style>
+:root {
+  --bg:#f5f5f5; --card:#fff; --t1:#1a1a1a; --t2:#666; --t3:#999;
+  --bd:rgba(0,0,0,0.08); --ibg:#fafafa; --ibd:#e0e0e0;
+  --gr:#1a7a4a; --grbg:#f0faf4; --grbd:#b2dfcc;
+  --rd:#d32f2f; --rdbg:#fff2f2; --rdbd:#ffcdd2;
+  --acc:#6dbf2e;
+}
+@media (prefers-color-scheme:dark) {
+  :root {
+    --bg:#111; --card:#1c1c1e; --t1:#f0f0f0; --t2:#aaa; --t3:#555;
+    --bd:rgba(255,255,255,0.07); --ibg:#2c2c2e; --ibd:rgba(255,255,255,0.1);
+    --gr:#4caf7d; --grbg:#1a2d22; --grbd:#1a4a30;
+    --rd:#ff6b6b; --rdbg:#2d1a1a; --rdbd:#5a2020;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1)}
+.app{max-width:480px;margin:0 auto;padding:0 0 90px;min-height:100vh;background:var(--bg)}
+
+/* HEADER */
+.hdr{padding:56px 16px 14px;background:var(--card);border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.hdr h1{font-size:20px;font-weight:700}
+.hdr-sub{font-size:11px;color:var(--t3);margin-top:1px}
+.dnav{display:flex;align-items:center;gap:2px}
+.dbtn{background:none;border:none;cursor:pointer;color:var(--t3);font-size:22px;padding:4px 10px;line-height:1}
+.dlbl{font-size:13px;color:var(--t2);min-width:110px;text-align:center}
+
+/* NAV */
+.nav{display:flex;background:var(--card);border-bottom:.5px solid var(--bd);position:sticky;top:91px;z-index:9;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nbtn{flex:0 0 auto;padding:12px 14px;font-size:13px;color:var(--t3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;white-space:nowrap}
+.nbtn.active{color:var(--t1);border-bottom-color:var(--t1);font-weight:600}
+
+/* SECTIONS */
+.sec{display:none;padding:16px}
+.sec.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:.5px solid var(--bd)}
+.ctitle{font-size:11px;color:var(--t3);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+
+/* INPUTS */
+.mrow{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.mrow:last-child{margin-bottom:0}
+.mlbl{font-size:15px;flex:1}
+.minput{width:100px;text-align:right;border:1px solid var(--ibd);border-radius:10px;padding:8px 10px;font-size:16px;font-family:inherit;color:var(--t1);background:var(--ibg);outline:none}
+.minput:focus{border-color:#007AFF;background:var(--card)}
+.munit{font-size:13px;color:var(--t3);width:32px}
+
+/* CARNÍVORA */
+.carni{width:100%;padding:18px;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.carni.on{background:var(--grbg);color:var(--gr);border:1.5px solid var(--grbd)}
+.carni.off{background:var(--rdbg);color:var(--rd);border:1.5px solid var(--rdbd)}
+
+/* IMPORT GARMIN */
+.imp-zone{border:1.5px dashed var(--ibd);border-radius:12px;padding:14px 14px 10px;background:var(--ibg);cursor:pointer;position:relative;transition:border-color .15s}
+.imp-zone:hover{border-color:var(--acc)}
+.imp-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.imp-inner{display:flex;align-items:center;gap:10px;pointer-events:none}
+.imp-icon{font-size:24px;flex-shrink:0}
+.imp-main{font-size:14px;font-weight:500}
+.imp-sub{font-size:12px;color:var(--t3);margin-top:1px}
+.imp-thumbs{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.imp-thumb{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--ibd)}
+.ext-btn{width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.ext-btn:disabled{opacity:.4;cursor:default}
+.ext-res{margin-top:10px;font-size:13px;border-radius:10px;padding:10px 12px;line-height:1.6}
+.ext-res.ok{background:var(--grbg);color:var(--gr)}
+.ext-res.err{background:var(--rdbg);color:var(--rd)}
+
+/* ACTIVIDADES DEL DÍA */
+.aday-empty{font-size:14px;color:var(--t3);padding:4px 0}
+.aday-item{padding:10px 0;border-bottom:.5px solid var(--bd)}
+.aday-item:last-child{border-bottom:none}
+.aday-hdr{display:flex;justify-content:space-between;margin-bottom:6px}
+.aday-title{font-size:14px;font-weight:600}
+.aday-tag{font-size:11px;color:var(--t3);background:var(--ibg);border-radius:20px;padding:2px 8px}
+.aday-mets{display:flex;gap:14px;flex-wrap:wrap}
+.adm{display:flex;flex-direction:column}
+.adm-v{font-size:15px;font-weight:600}
+.adm-l{font-size:10px;color:var(--t3);margin-top:1px}
+
+/* BOTONES */
+.save-btn{width:100%;padding:15px;background:var(--t1);color:var(--card);border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;transition:opacity .15s}
+.save-btn:active{opacity:.75}
+.export-btn{width:100%;padding:12px;background:var(--ibg);color:var(--t2);border:1px solid var(--ibd);border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:8px}
+
+/* SUPLEMENTOS */
+.sg-title{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px;margin-top:16px;padding-left:2px}
+.sg-title:first-child{margin-top:0}
+.sup{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--grbg);border:1px solid var(--grbd);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.sup.miss{background:var(--rdbg);border-color:var(--rdbd)}
+.sup.miss .sn{text-decoration:line-through;color:var(--rd)}
+.sup.miss .sd{color:var(--rd);opacity:.7}
+.sup.miss .sc{color:var(--rd)}
+.sc{font-size:16px;flex-shrink:0;color:var(--gr)}
+.si{flex:1}
+.sn{font-size:14px;font-weight:500}
+.sd{font-size:12px;color:var(--t3);margin-top:2px}
+
+/* ESTADÍSTICAS */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.scard{background:var(--card);border-radius:14px;padding:14px;border:.5px solid var(--bd)}
+.slbl{font-size:11px;color:var(--t3);margin-bottom:5px;font-weight:500}
+.sval{font-size:24px;font-weight:600;line-height:1}
+.sval span{font-size:14px;font-weight:400;color:var(--t3)}
+.ssub{font-size:11px;color:var(--t3);opacity:.6;margin-top:3px}
+.psel{display:flex;gap:6px;margin-bottom:12px}
+.pbtn{padding:6px 14px;border:1px solid var(--ibd);border-radius:20px;font-size:13px;background:var(--card);cursor:pointer;color:var(--t2);font-family:inherit;font-weight:500}
+.pbtn.active{background:var(--t1);color:var(--card);border-color:var(--t1)}
+.cwrap{position:relative;width:100%;height:180px}
+.cwrap-lg{position:relative;width:100%;height:220px}
+.leg{display:flex;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.legi{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)}
+.legd{width:10px;height:3px;border-radius:2px;display:inline-block}
+
+/* ACTIVIDADES TAB */
+.ali{padding:13px 0;border-bottom:.5px solid var(--bd)}
+.ali:last-child{border-bottom:none}
+.ali-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
+.ali-t{font-size:15px;font-weight:600}
+.ali-d{font-size:12px;color:var(--t3)}
+.ali-m{display:flex;gap:14px;flex-wrap:wrap}
+.alm{display:flex;flex-direction:column}
+.alm-v{font-size:15px;font-weight:600}
+.alm-l{font-size:10px;color:var(--t3);margin-top:1px}
+
+/* LOGROS */
+.sr{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--bd)}
+.sr:last-child{border-bottom:none}
+.sname{font-size:14px}
+.sval2{font-size:14px;font-weight:600;color:var(--t3)}
+.sval2.good{color:var(--gr)}
+
+/* TOAST */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--t1);color:var(--card);padding:11px 22px;border-radius:22px;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* iframe proxy oculto */
+#apiProxy{display:none;width:0;height:0;border:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div>
+      <h1>John Health</h1>
+      <div class="hdr-sub">A Coruña · 43 años</div>
+    </div>
+    <div class="dnav">
+      <button class="dbtn" onclick="changeDay(-1)">‹</button>
+      <span class="dlbl" id="dateLabel"></span>
+      <button class="dbtn" onclick="changeDay(1)">›</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nbtn active" onclick="showTab('registro',this)">Registro</button>
+    <button class="nbtn" onclick="showTab('actividades',this)">Actividades</button>
+    <button class="nbtn" onclick="showTab('suplementos',this)">Suplementos</button>
+    <button class="nbtn" onclick="showTab('stats',this)">Estadísticas</button>
+    <button class="nbtn" onclick="showTab('logros',this)">Logros</button>
+  </div>
+
+  <!-- ══════════ REGISTRO ══════════ -->
+  <div id="tab-registro" class="sec active">
+
+    <div class="card" style="padding:14px">
+      <div class="ctitle" style="margin-bottom:10px">Dieta carnívora</div>
+      <button class="carni off" id="carniBtn" onclick="toggleCarni()">✗ No respetada hoy</button>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Cuerpo</div>
+      <div class="mrow">
+        <span class="mlbl">Peso</span>
+        <input class="minput" type="number" step="0.1" inputmode="decimal" id="peso" placeholder="—">
+        <span class="munit">kg</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Importar actividad Garmin</div>
+      <div class="imp-zone" id="dropZone">
+        <input type="file" accept="image/*" multiple id="fileInput" onchange="onFiles(this.files)">
+        <div class="imp-inner">
+          <div class="imp-icon">📷</div>
+          <div>
+            <div class="imp-main">Subir capturas de Garmin Connect</div>
+            <div class="imp-sub">1 o 2 fotos · Resumen y/o Estadísticas</div>
+          </div>
+        </div>
+        <div class="imp-thumbs" id="thumbRow"></div>
+      </div>
+      <button class="ext-btn" id="extBtn" onclick="extractGarmin()" disabled>
+        <span id="extIcon">✦</span><span id="extTxt">Extraer datos con IA</span>
+      </button>
+      <div id="extRes"></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Actividades del día</div>
+      <div id="actDay"></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Notas</div>
+      <textarea id="notas" placeholder="Cómo te has sentido, algo destacable…"
+        style="width:100%;border:1px solid var(--ibd);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;color:var(--t1);background:var(--ibg);resize:none;height:76px;outline:none"
+        onfocus="this.style.borderColor='#007AFF'" onblur="this.style.borderColor='var(--ibd)'"></textarea>
+    </div>
+
+    <button class="save-btn" onclick="saveDay()">Guardar día</button>
+    <button class="export-btn" onclick="exportJSON()">⬇ Exportar datos JSON</button>
+  </div>
+
+  <!-- ══════════ ACTIVIDADES ══════════ -->
+  <div id="tab-actividades" class="sec">
+    <div class="sgrid" id="actStats"></div>
+
+    <div class="card">
+      <div class="ctitle">Pasos semanales — Garmin</div>
+      <div class="cwrap-lg"><canvas id="cPasosG"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">FC en reposo histórica</div>
+      <div class="leg"><span class="legi"><span class="legd" style="background:#E24B4A"></span>FC reposo (ppm)</span></div>
+      <div class="cwrap"><canvas id="cFCR"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Distancia por actividad (km)</div>
+      <div class="cwrap"><canvas id="cDist"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">FC media · FC máxima por actividad</div>
+      <div class="leg">
+        <span class="legi"><span class="legd" style="background:#E24B4A"></span>FC media</span>
+        <span class="legi"><span class="legd" style="background:rgba(226,75,74,0.3)"></span>FC máx</span>
+      </div>
+      <div class="cwrap"><canvas id="cFC"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Ritmo medio por actividad (min/km)</div>
+      <div class="cwrap"><canvas id="cRitmo"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Calorías por actividad</div>
+      <div class="cwrap"><canvas id="cCal"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Ascenso total por actividad (m↑)</div>
+      <div class="cwrap"><canvas id="cAsc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Pasos por actividad</div>
+      <div class="cwrap"><canvas id="cPasosA"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Historial de actividades</div>
+      <div id="actList"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SUPLEMENTOS ══════════ -->
+  <div id="tab-suplementos" class="sec">
+    <div class="card">
+      <div class="ctitle">Stack del día — toca lo que hayas saltado</div>
+      <div id="supList"></div>
+    </div>
+    <button class="save-btn" onclick="saveSupl()">Guardar suplementos</button>
+  </div>
+
+  <!-- ══════════ ESTADÍSTICAS ══════════ -->
+  <div id="tab-stats" class="sec">
+    <div class="psel">
+      <button class="pbtn active" onclick="setPeriod(7,this)">7d</button>
+      <button class="pbtn" onclick="setPeriod(30,this)">30d</button>
+      <button class="pbtn" onclick="setPeriod(90,this)">3m</button>
+    </div>
+    <div class="sgrid" id="statsCards"></div>
+    <div class="card">
+      <div class="ctitle">Evolución del peso 2026</div>
+      <div class="leg">
+        <span class="legi"><span class="legd" style="background:#378ADD"></span>Peso diario</span>
+        <span class="legi"><span class="legd" style="border-top:2px dashed #E24B4A;width:14px"></span>Media 7d</span>
+      </div>
+      <div class="cwrap-lg"><canvas id="cPeso"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Calorías activas semanales</div>
+      <div class="cwrap"><canvas id="cCalSem"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Dieta carnívora — últimos 28 días</div>
+      <div id="carniCal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ LOGROS ══════════ -->
+  <div id="tab-logros" class="sec">
+    <div class="card" id="logrRec"></div>
+    <div class="card" id="logrSupl"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Guardado</div>
+
+<!-- iframe oculto para llamadas API (evita CORS) -->
+<iframe id="apiProxy" sandbox="allow-scripts allow-same-origin"></iframe>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ════════════════════════════════════════════
+// DATOS ESTÁTICOS GARMIN
+// ════════════════════════════════════════════
+const GARMIN = {
+  pasosSemanales: [
+    {w:'23Jun25',v:85019},{w:'30Jun',v:86178},{w:'7Jul',v:82155},{w:'14Jul',v:87827},{w:'21Jul',v:95449},
+    {w:'28Jul',v:69272},{w:'4Ago',v:74772},{w:'11Ago',v:85622},{w:'18Ago',v:93618},{w:'25Ago',v:69253},
+    {w:'1Sep',v:68635},{w:'8Sep',v:118000},{w:'15Sep',v:65265},{w:'22Sep',v:72640},{w:'29Sep',v:76069},
+    {w:'6Oct',v:65383},{w:'13Oct',v:67896},{w:'20Oct',v:61827},{w:'27Oct',v:68395},{w:'3Nov',v:58050},
+    {w:'10Nov',v:74760},{w:'17Nov',v:57135},{w:'24Nov',v:69843},{w:'1Dic',v:64981},{w:'8Dic',v:55357},
+    {w:'15Dic',v:57437},{w:'22Dic',v:79262},{w:'29Dic',v:54864},{w:'5Ene26',v:49795},{w:'12Ene',v:65312},
+    {w:'19Ene',v:73362},{w:'26Ene',v:42295},{w:'2Feb',v:29182},{w:'9Feb',v:72031},{w:'16Feb',v:67309},
+    {w:'23Feb',v:70749},{w:'2Mar',v:70704},{w:'9Mar',v:64854},{w:'16Mar',v:50627},{w:'23Mar',v:74085},
+    {w:'30Mar',v:62179},{w:'6Abr',v:97099},{w:'13Abr',v:76843},{w:'20Abr',v:78395},{w:'27Abr',v:66031},
+    {w:'4May',v:69214},{w:'11May',v:68457},{w:'18May',v:88180},{w:'25May',v:73518},{w:'1Jun',v:72630},
+    {w:'8Jun',v:96452},{w:'15Jun',v:88517}
+  ],
+  fcReposo: [
+    48,50,48,48,49,47,46,46,49,48,49,53,52,52,50,51,48,50,51,49,
+    50,50,51,52,50,51,51,52,52,55,54,55,54,52,52,51,50,50,51,49,
+    54,53,52,51,50,49,51,54,54,54,54,53
+  ],
+  fcReposoLabels: [
+    '23Jun','30Jun','7Jul','14Jul','21Jul','28Jul','4Ago','11Ago','18Ago','25Ago',
+    '1Sep','8Sep','15Sep','22Sep','29Sep','6Oct','13Oct','20Oct','27Oct','3Nov',
+    '10Nov','17Nov','24Nov','1Dic','8Dic','15Dic','22Dic','29Dic','5Ene','12Ene',
+    '19Ene','26Ene','2Feb','9Feb','16Feb','23Feb','2Mar','9Mar','16Mar','23Mar',
+    '30Mar','6Abr','13Abr','20Abr','27Abr','4May','11May','18May','25May','1Jun',
+    '8Jun','15Jun'
+  ],
+  calorias: [
+    {w:'23Jun',v:2175},{w:'30Jun',v:2322},{w:'7Jul',v:2290},{w:'14Jul',v:2431},{w:'21Jul',v:2464},
+    {w:'28Jul',v:1765},{w:'4Ago',v:2571},{w:'11Ago',v:2493},{w:'18Ago',v:2061},{w:'25Ago',v:1393},
+    {w:'1Sep',v:1562},{w:'8Sep',v:4649},{w:'15Sep',v:2030},{w:'22Sep',v:2427},{w:'29Sep',v:2135},
+    {w:'6Oct',v:2197},{w:'13Oct',v:1543},{w:'20Oct',v:1578},{w:'27Oct',v:1845},{w:'3Nov',v:1311},
+    {w:'10Nov',v:1864},{w:'17Nov',v:1465},{w:'24Nov',v:2078},{w:'1Dic',v:2034},{w:'8Dic',v:1188},
+    {w:'15Dic',v:1392},{w:'22Dic',v:2523},{w:'29Dic',v:1396},{w:'5Ene',v:1249},{w:'12Ene',v:2530},
+    {w:'19Ene',v:2468},{w:'26Ene',v:1512},{w:'2Feb',v:1177},{w:'9Feb',v:2356},{w:'16Feb',v:2038},
+    {w:'23Feb',v:1839},{w:'2Mar',v:2240},{w:'9Mar',v:1732},{w:'16Mar',v:1402},{w:'23Mar',v:2431},
+    {w:'30Mar',v:2031},{w:'6Abr',v:3249},{w:'13Abr',v:2437},{w:'20Abr',v:2264},{w:'27Abr',v:1668},
+    {w:'4May',v:1998},{w:'11May',v:3230},{w:'18May',v:2204},{w:'25May',v:1299},{w:'1Jun',v:1071},
+    {w:'8Jun',v:2186},{w:'15Jun',v:1965}
+  ],
+  acts: [
+    {tipo:'Caminar',titulo:'Marinha Grande',fecha:'2026-06-21',dist:5.05,cal:265,tiempo:'1:08',fcMed:98,fcMax:118,cad:101,ritmo:'13:32',pasos:7238,asc:9,te:2.2},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-20',dist:2.88,cal:158,tiempo:'0:31',fcMed:132,fcMax:169,cad:103,ritmo:'10:57',pasos:3446,asc:41,te:2.4},
+    {tipo:'Caminar',titulo:'La Coruña AM',fecha:'2026-06-20',dist:2.50,cal:136,tiempo:'0:27',fcMed:120,fcMax:141,cad:106,ritmo:'10:49',pasos:2904,asc:40,te:2.3},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-17',dist:3.87,cal:229,tiempo:'0:46',fcMed:135,fcMax:165,cad:101,ritmo:'11:51',pasos:4922,asc:92,te:3.1},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-16',dist:4.12,cal:237,tiempo:'0:51',fcMed:114,fcMax:152,cad:100,ritmo:'12:18',pasos:5488,asc:109,te:2.6},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-15',dist:4.48,cal:265,tiempo:'0:56',fcMed:134,fcMax:179,cad:101,ritmo:'12:24',pasos:6058,asc:126,te:3.1},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-14',dist:3.76,cal:213,tiempo:'0:46',fcMed:121,fcMax:156,cad:103,ritmo:'12:07',pasos:4876,asc:102,te:2.8},
+    {tipo:'Caminar',titulo:'La Coruña PM',fecha:'2026-06-13',dist:4.18,cal:236,tiempo:'1:04',fcMed:108,fcMax:158,cad:82,ritmo:'15:23',pasos:5878,asc:83,te:1.8},
+    {tipo:'Caminar',titulo:'La Coruña AM',fecha:'2026-06-13',dist:2.54,cal:140,tiempo:'0:29',fcMed:131,fcMax:150,cad:105,ritmo:'11:32',pasos:3162,asc:39,te:2.2},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-12',dist:2.86,cal:161,tiempo:'0:39',fcMed:130,fcMax:159,cad:88,ritmo:'13:43',pasos:3890,asc:44,te:2.1},
+    {tipo:'Caminar',titulo:'La Coruña PM',fecha:'2026-06-11',dist:2.40,cal:143,tiempo:'0:37',fcMed:131,fcMax:164,cad:77,ritmo:'15:19',pasos:3418,asc:45,te:1.8},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-11',dist:2.08,cal:130,tiempo:'0:28',fcMed:134,fcMax:175,cad:89,ritmo:'13:24',pasos:2784,asc:59,te:2.3},
+    {tipo:'Caminar',titulo:'La Coruña AM',fecha:'2026-06-11',dist:2.62,cal:153,tiempo:'0:31',fcMed:136,fcMax:166,cad:101,ritmo:'11:40',pasos:3182,asc:44,te:2.5},
+    {tipo:'Caminar',titulo:'La Coruña PM',fecha:'2026-06-10',dist:3.09,cal:178,tiempo:'0:37',fcMed:126,fcMax:164,cad:101,ritmo:'12:06',pasos:3922,asc:66,te:2.7},
+    {tipo:'Caminar',titulo:'La Coruña AM',fecha:'2026-06-10',dist:3.21,cal:181,tiempo:'0:37',fcMed:130,fcMax:167,cad:100,ritmo:'11:40',pasos:3822,asc:35,te:2.5},
+    {tipo:'Fuerza',titulo:'Fuerza',fecha:'2026-06-08',dist:0,cal:58,tiempo:'0:19',fcMed:111,fcMax:132,cad:0,ritmo:'—',pasos:16,asc:0,te:0.5},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-07',dist:1.61,cal:105,tiempo:'0:28',fcMed:111,fcMax:148,cad:72,ritmo:'17:27',pasos:2128,asc:47,te:1.4},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-06',dist:2.66,cal:152,tiempo:'0:33',fcMed:131,fcMax:160,cad:100,ritmo:'12:22',pasos:3472,asc:60,te:2.3},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-04',dist:1.11,cal:58,tiempo:'0:15',fcMed:114,fcMax:134,cad:95,ritmo:'13:29',pasos:1494,asc:22,te:0.8},
+    {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-05-27',dist:1.50,cal:91,tiempo:'0:19',fcMed:126,fcMax:160,cad:97,ritmo:'12:44',pasos:1958,asc:35,te:2.1}
+  ]
+};
+
+const PESO_2026 = [
+  {f:'2026-01-01',v:90.7},{f:'2026-01-08',v:90.2},{f:'2026-01-15',v:89.8},{f:'2026-01-22',v:89.5},
+  {f:'2026-01-29',v:89.1},{f:'2026-02-05',v:88.9},{f:'2026-02-12',v:88.6},{f:'2026-02-19',v:88.2},
+  {f:'2026-02-26',v:87.9},{f:'2026-03-05',v:87.5},{f:'2026-03-12',v:87.1},{f:'2026-03-19',v:86.8},
+  {f:'2026-03-26',v:86.4},{f:'2026-04-02',v:86.1},{f:'2026-04-09',v:85.7},{f:'2026-04-16',v:85.3},
+  {f:'2026-04-23',v:85.0},{f:'2026-04-30',v:84.7},{f:'2026-05-07',v:84.3},{f:'2026-05-14',v:84.0},
+  {f:'2026-05-21',v:83.6},{f:'2026-05-28',v:83.2},{f:'2026-06-04',v:82.9},{f:'2026-06-11',v:82.5},
+  {f:'2026-06-18',v:82.1}
+];
+
+const SUPLS = [
+  {grupo:'En ayunas / mañana', items:[
+    {id:'crea',n:'Creapure® Creatina',d:'5g'},
+    {id:'vitC',n:'Vitamina C',d:'1g'},
+    {id:'ala',n:'Na-R-ALA',d:'300mg'},
+    {id:'cola',n:'Colágeno hidrolizado bovino',d:'10g'}
+  ]},
+  {grupo:'Comida principal (~13h)', items:[
+    {id:'om3',n:'Omega-3 TG IFOS',d:'—'},
+    {id:'d3k2',n:'D3 5000UI + K2 200mcg',d:'—'},
+    {id:'multi',n:'Multivitamínico (sin Fe ni I)',d:'—'},
+    {id:'coq',n:'CoQ10 200mg + BioPerine',d:'—'},
+    {id:'prob',n:'GI Biotics 100B',d:'—'},
+    {id:'nac',n:'NAC',d:'600mg'},
+    {id:'carn',n:'L-Carnitina Tartrato Carnipure',d:'—'}
+  ]},
+  {grupo:'Durante el día', items:[
+    {id:'kcl',n:'LoSalt / KCl en infusiones',d:'—'}
+  ]},
+  {grupo:'Antes de dormir', items:[
+    {id:'mg',n:'Mg bisglicinato 200mg + B6',d:'—'},
+    {id:'ashw',n:'KSM-66 Ashwagandha',d:'—'},
+    {id:'ps',n:'Fosfatidilserina',d:'300mg'},
+    {id:'gly',n:'Glycine HSN',d:'5g'}
+  ]}
+];
+
+// ════════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════════
+let currentDate = new Date();
+let currentPeriod = 7;
+let charts = {};
+let selectedFiles = [];
+let carnivoreOn = false;
+let suplMissed = new Set();
+let apiCallbacks = {};
+let apiCallId = 0;
+
+function dk(d){ return d.toISOString().split('T')[0]; }
+function ld(){ try{ return JSON.parse(localStorage.getItem('jh')||'{}'); } catch(e){ return {}; } }
+function sd(d){ localStorage.setItem('jh', JSON.stringify(d)); }
+function toast(msg='✓ Guardado'){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+// ════════════════════════════════════════════
+// PROXY IFRAME para llamadas a la API (sin CORS)
+// El iframe se carga con srcdoc y tiene acceso a fetch sin restricciones CORS
+// porque está en el mismo origen que la app
+// ════════════════════════════════════════════
+function setupProxy() {
+  const iframe = document.getElementById('apiProxy');
+  const iframeDoc = `<!DOCTYPE html><html><body><script>
+window.addEventListener('message', async function(e) {
+  if(e.data.type !== 'API_CALL') return;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+      body: JSON.stringify(e.data.payload)
+    });
+    const data = await r.json();
+    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:r.ok, status:r.status, data}, e.origin);
+  } catch(err) {
+    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:false, error:err.message}, e.origin);
+  }
+});
+<\/script></body></html>`;
+  iframe.srcdoc = iframeDoc;
+
+  window.addEventListener('message', function(e) {
+    if(e.data.type !== 'API_RESULT') return;
+    const cb = apiCallbacks[e.data.id];
+    if(cb){ delete apiCallbacks[e.data.id]; cb(e.data); }
+  });
+}
+
+function callAPI(payload) {
+  return new Promise((resolve, reject) => {
+    const id = ++apiCallId;
+    apiCallbacks[id] = (result) => {
+      if(result.ok) resolve(result.data);
+      else reject(new Error(result.data?.error?.message || result.error || `HTTP ${result.status}`));
+    };
+    document.getElementById('apiProxy').contentWindow.postMessage({ type:'API_CALL', id, payload }, '*');
+    setTimeout(() => { if(apiCallbacks[id]){ delete apiCallbacks[id]; reject(new Error('Timeout (30s)')); } }, 30000);
+  });
+}
+
+// ════════════════════════════════════════════
+// FECHA NAV
+// ════════════════════════════════════════════
+function fmtDate(d){
+  const t=new Date(), y=new Date(t); y.setDate(t.getDate()-1);
+  if(dk(d)===dk(t)) return 'Hoy · '+d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  if(dk(d)===dk(y)) return 'Ayer · '+d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+}
+function changeDay(delta){ currentDate=new Date(currentDate); currentDate.setDate(currentDate.getDate()+delta); loadDay(); document.getElementById('dateLabel').textContent=fmtDate(currentDate); }
+
+// ════════════════════════════════════════════
+// CARNÍVORA
+// ════════════════════════════════════════════
+function toggleCarni(){ setCarni(!carnivoreOn); }
+function setCarni(v){
+  carnivoreOn=v;
+  const b=document.getElementById('carniBtn');
+  b.className='carni '+(v?'on':'off');
+  b.textContent=v?'✓ Dieta carnívora respetada':'✗ No respetada hoy';
+}
+
+// ════════════════════════════════════════════
+// ACTIVIDADES DEL DÍA
+// ════════════════════════════════════════════
+function renderActDay(){
+  const key=dk(currentDate), data=ld();
+  const stored=(data[key]?.actividades||[]);
+  const garmin=GARMIN.acts.filter(a=>a.fecha===key);
+  const all=[...garmin,...stored];
+  const div=document.getElementById('actDay');
+  if(!all.length){ div.innerHTML='<div class="aday-empty">Sin actividades registradas</div>'; return; }
+  div.innerHTML=all.map(a=>`
+    <div class="aday-item">
+      <div class="aday-hdr">
+        <span class="aday-title">${a.titulo||a.tipo||'Actividad'}</span>
+        <span class="aday-tag">${a.tipo||'—'}</span>
+      </div>
+      <div class="aday-mets">
+        ${(a.dist>0)?`<div class="adm"><span class="adm-v">${(+a.dist).toFixed(2)}</span><span class="adm-l">km</span></div>`:''}
+        <div class="adm"><span class="adm-v">${a.tiempo||'—'}</span><span class="adm-l">duración</span></div>
+        <div class="adm"><span class="adm-v">${a.fcMed||a.fc_media||'—'}</span><span class="adm-l">FC med</span></div>
+        <div class="adm"><span class="adm-v">${a.cal||a.calorias||'—'}</span><span class="adm-l">kcal</span></div>
+        ${(a.ritmo&&a.ritmo!=='—')?`<div class="adm"><span class="adm-v">${a.ritmo}</span><span class="adm-l">min/km</span></div>`:''}
+        <div class="adm"><span class="adm-v">${a.asc||a.ascenso||0}</span><span class="adm-l">m↑</span></div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// LOAD / SAVE DAY
+// ════════════════════════════════════════════
+function loadDay(){
+  const data=ld(), key=dk(currentDate), day=data[key]||{};
+  document.getElementById('peso').value=day.peso||'';
+  document.getElementById('notas').value=day.notas||'';
+  setCarni(day.carnivore===true);
+  renderActDay();
+  document.getElementById('extRes').innerHTML='';
+  document.getElementById('thumbRow').innerHTML='';
+  selectedFiles=[];
+  document.getElementById('extBtn').disabled=true;
+}
+function saveDay(){
+  const data=ld(), key=dk(currentDate);
+  if(!data[key]) data[key]={};
+  const p=parseFloat(document.getElementById('peso').value);
+  if(p) data[key].peso=p; else delete data[key].peso;
+  data[key].carnivore=carnivoreOn;
+  data[key].notas=document.getElementById('notas').value;
+  sd(data); toast();
+}
+function exportJSON(){
+  const data=ld();
+  const blob=new Blob([JSON.stringify({johnHealth:data,exportedAt:new Date().toISOString(),garminActs:GARMIN.acts},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='john-health-'+dk(currentDate)+'.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════════
+// IMPORT GARMIN
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  const dz=document.getElementById('dropZone');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--acc)';});
+  dz.addEventListener('dragleave',()=>{dz.style.borderColor='var(--ibd)';});
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='var(--ibd)';onFiles(e.dataTransfer.files);});
+});
+
+function onFiles(files){
+  selectedFiles=Array.from(files);
+  const row=document.getElementById('thumbRow');
+  row.innerHTML='';
+  selectedFiles.forEach(f=>{
+    const img=document.createElement('img'); img.className='imp-thumb';
+    img.src=URL.createObjectURL(f); row.appendChild(img);
+  });
+  document.getElementById('extBtn').disabled=!selectedFiles.length;
+  document.getElementById('extRes').innerHTML='';
+}
+
+function b64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=()=>rej(new Error('Error leyendo archivo'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function extractGarmin(){
+  if(!selectedFiles.length) return;
+  const btn=document.getElementById('extBtn');
+  const icon=document.getElementById('extIcon');
+  const txt=document.getElementById('extTxt');
+  const res=document.getElementById('extRes');
+  btn.disabled=true; icon.textContent='⏳'; txt.textContent='Analizando…'; res.innerHTML='';
+
+  try {
+    const imgs=await Promise.all(selectedFiles.map(async f=>({
+      type:'image',
+      source:{type:'base64',media_type:f.type||'image/jpeg',data:await b64(f)}
+    })));
+
+    const apiData = await callAPI({
+      model:'claude-sonnet-4-6',
+      max_tokens:1000,
+      messages:[{role:'user',content:[
+        ...imgs,
+        {type:'text',text:'Analiza esta(s) captura(s) de Garmin Connect y extrae todos los datos visibles. Devuelve SOLO un objeto JSON válido, sin texto extra, sin markdown, sin backticks. Campos: {"tipo":"Caminar|Correr|Ciclismo|Fuerza|Otro","titulo":"string","fecha":"YYYY-MM-DD","dist":número,"cal":número,"tiempo":"H:MM","fcMed":número,"fcMax":número,"cad":número,"ritmo":"MM:SS o null","pasos":número,"asc":número,"te":número}. Si no ves un campo, omítelo.'}
+      ]}]
+    });
+
+    const raw=apiData.content?.find(b=>b.type==='text')?.text||'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+
+    // Guardar en localStorage
+    const actDate=parsed.fecha||dk(currentDate);
+    const stored=ld();
+    if(!stored[actDate]) stored[actDate]={};
+    if(!stored[actDate].actividades) stored[actDate].actividades=[];
+    // Evitar duplicados por titulo+fecha
+    const dup=stored[actDate].actividades.find(a=>a.titulo===parsed.titulo&&a.tiempo===parsed.tiempo);
+    if(!dup) stored[actDate].actividades.push(parsed);
+    sd(stored);
+    renderActDay();
+
+    const lines=[
+      parsed.tipo&&`<b>Tipo:</b> ${parsed.tipo}`,
+      parsed.titulo&&`<b>Título:</b> ${parsed.titulo}`,
+      parsed.fecha&&`<b>Fecha:</b> ${parsed.fecha}`,
+      parsed.dist&&`<b>Dist:</b> ${parsed.dist} km`,
+      parsed.cal&&`<b>Cal:</b> ${parsed.cal} kcal`,
+      parsed.tiempo&&`<b>Tiempo:</b> ${parsed.tiempo}`,
+      parsed.fcMed&&`<b>FC med:</b> ${parsed.fcMed} ppm`,
+      parsed.fcMax&&`<b>FC máx:</b> ${parsed.fcMax} ppm`,
+      parsed.ritmo&&parsed.ritmo!=='null'&&`<b>Ritmo:</b> ${parsed.ritmo} min/km`,
+      parsed.pasos&&`<b>Pasos:</b> ${(+parsed.pasos).toLocaleString('es-ES')}`,
+      parsed.asc&&`<b>Ascenso:</b> ${parsed.asc} m`,
+    ].filter(Boolean).join('  ·  ');
+    res.className='ext-res ok'; res.innerHTML='✓ Guardado<br><span style="font-size:12px">'+lines+'</span>';
+  } catch(e){
+    res.className='ext-res err'; res.innerHTML='✗ '+e.message;
+  }
+  btn.disabled=false; icon.textContent='✦'; txt.textContent='Extraer datos con IA';
+}
+
+// ════════════════════════════════════════════
+// SUPLEMENTOS
+// ════════════════════════════════════════════
+function renderSupl(){
+  const data=ld(), key=dk(currentDate);
+  suplMissed=new Set(data[key]?.suplMissed||[]);
+  document.getElementById('supList').innerHTML=SUPLS.map(g=>`
+    <div class="sg-title">${g.grupo}</div>
+    ${g.items.map(s=>`
+      <div class="sup ${suplMissed.has(s.id)?'miss':''}" id="sup-${s.id}" onclick="togSupl('${s.id}')">
+        <span class="sc">${suplMissed.has(s.id)?'✗':'✓'}</span>
+        <div class="si"><div class="sn">${s.n}</div><div class="sd">${s.d}</div></div>
+      </div>`).join('')}`).join('');
+}
+function togSupl(id){
+  if(suplMissed.has(id)) suplMissed.delete(id); else suplMissed.add(id);
+  const el=document.getElementById('sup-'+id);
+  const m=suplMissed.has(id);
+  el.className='sup '+(m?'miss':'');
+  el.querySelector('.sc').textContent=m?'✗':'✓';
+}
+function saveSupl(){
+  const data=ld(), key=dk(currentDate);
+  if(!data[key]) data[key]={};
+  data[key].suplMissed=[...suplMissed];
+  sd(data); toast();
+}
+
+// ════════════════════════════════════════════
+// CHART HELPERS
+// ════════════════════════════════════════════
+const isDark=()=>matchMedia('(prefers-color-scheme:dark)').matches;
+function th(){
+  const d=isDark();
+  return {
+    tx:d?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.35)',
+    gr:d?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)',
+    tip:{backgroundColor:d?'#2a2a2a':'#fff',titleColor:d?'#f0f0f0':'#1a1a1a',bodyColor:d?'#aaa':'#555',borderColor:d?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.08)',borderWidth:1,padding:10,cornerRadius:8}
+  };
+}
+function baseO(ext={}){
+  const t=th();
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:t.tip,...(ext.plugins||{})},
+    scales:{
+      x:{ticks:{color:t.tx,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8},grid:{color:t.gr},border:{display:false}},
+      y:{ticks:{color:t.tx,font:{size:10}},grid:{color:t.gr},border:{display:false}},
+      ...(ext.scales||{})
+    },...(ext.extra||{})};
+}
+function xRotO(){ // opciones con eje X rotado para actividades
+  const t=th();
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:t.tip},
+    scales:{
+      x:{ticks:{color:t.tx,font:{size:9},maxRotation:45,autoSkip:false},grid:{color:t.gr},border:{display:false}},
+      y:{ticks:{color:t.tx,font:{size:10}},grid:{color:t.gr},border:{display:false}}
+    }};
+}
+function dc(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+function mavg(arr,w){ return arr.map((v,i)=>{ const s=arr.slice(Math.max(0,i-w+1),i+1).filter(x=>x!=null); return s.length?+(s.reduce((a,b)=>a+b,0)/s.length).toFixed(1):null; }); }
+
+// ════════════════════════════════════════════
+// RENDER ACTIVIDADES
+// ════════════════════════════════════════════
+function renderActividades(){
+  const acts=GARMIN.acts;
+  const lbs=acts.map(a=>{const d=new Date(a.fecha+'T12:00:00');return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});});
+  const t=th();
+
+  // Períodos para stats
+  const todayKey = dk(new Date());
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay()===0?-6:1)); // lunes
+  const weekStartKey = dk(weekStart);
+  const yearStartKey = new Date().getFullYear() + '-01-01';
+
+  // Combinar actividades estáticas Garmin + las guardadas en localStorage
+  const stored = ld();
+  const storedActs = Object.entries(stored).flatMap(([fecha,day])=>(day.actividades||[]).map(a=>({...a,fecha})));
+  const allActs = [...GARMIN.acts, ...storedActs];
+
+  function statsFor(arr){
+    const dist = arr.reduce((s,a)=>s+(+a.dist||0),0);
+    const cal  = arr.reduce((s,a)=>s+(+a.cal||0),0);
+    const asc  = arr.reduce((s,a)=>s+(+a.asc||a.ascenso||0),0);
+    return {dist, cal, asc, n:arr.length};
+  }
+
+  const sHoy    = statsFor(allActs.filter(a=>a.fecha===todayKey));
+  const sSem    = statsFor(allActs.filter(a=>a.fecha>=weekStartKey));
+  const sAnyo   = statsFor(allActs.filter(a=>a.fecha>=yearStartKey));
+
+  function statCard(lbl, sub, dist, cal, asc, n){
+    return `<div class="scard" style="grid-column:span 2">
+      <div class="slbl" style="margin-bottom:8px">${lbl} <span style="font-weight:400;color:var(--t3)">${sub}</span></div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap">
+        <div><div style="font-size:20px;font-weight:700;line-height:1">${dist.toFixed(1)}<span style="font-size:13px;font-weight:400;color:var(--t3)"> km</span></div><div style="font-size:10px;color:var(--t3);margin-top:2px">${n} actividad${n!==1?'es':''}</div></div>
+        <div><div style="font-size:20px;font-weight:700;line-height:1">${cal.toLocaleString('es-ES')}<span style="font-size:13px;font-weight:400;color:var(--t3)"> kcal</span></div><div style="font-size:10px;color:var(--t3);margin-top:2px">calorías</div></div>
+        <div><div style="font-size:20px;font-weight:700;line-height:1">${asc}<span style="font-size:13px;font-weight:400;color:var(--t3)"> m↑</span></div><div style="font-size:10px;color:var(--t3);margin-top:2px">ascenso</div></div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('actStats').innerHTML =
+    statCard('Hoy', new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short'}), sHoy.dist, sHoy.cal, sHoy.asc, sHoy.n) +
+    statCard('Esta semana', 'lun–'+new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short'}), sSem.dist, sSem.cal, sSem.asc, sSem.n) +
+    statCard('Año '+new Date().getFullYear(), '1 ene–hoy', sAnyo.dist, sAnyo.cal, sAnyo.asc, sAnyo.n);
+
+  // Pasos semanales
+  const pg=GARMIN.pasosSemanales.slice(-20);
+  dc('cPasosG');
+  charts['cPasosG']=new Chart(document.getElementById('cPasosG'),{type:'bar',data:{labels:pg.map(x=>x.w),datasets:[{data:pg.map(x=>x.v),backgroundColor:pg.map(x=>x.v>=80000?'rgba(29,158,117,0.7)':'rgba(55,138,221,0.55)'),borderRadius:4,borderSkipped:false}]},options:baseO()});
+
+  // FC reposo
+  dc('cFCR');
+  charts['cFCR']=new Chart(document.getElementById('cFCR'),{type:'line',data:{labels:GARMIN.fcReposoLabels,datasets:[{data:GARMIN.fcReposo,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',pointRadius:2,tension:0.4,fill:true}]},options:baseO({scales:{y:{min:44,max:58,ticks:{color:th().tx,font:{size:10}},grid:{color:th().gr},border:{display:false}}}})});
+
+  // Distancia
+  dc('cDist');
+  charts['cDist']=new Chart(document.getElementById('cDist'),{type:'bar',data:{labels:lbs,datasets:[{data:acts.map(a=>a.dist),backgroundColor:'rgba(55,138,221,0.6)',borderRadius:4,borderSkipped:false}]},options:xRotO()});
+
+  // FC
+  dc('cFC');
+  charts['cFC']=new Chart(document.getElementById('cFC'),{type:'line',data:{labels:lbs,datasets:[
+    {data:acts.map(a=>a.fcMed),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.07)',pointRadius:4,pointBackgroundColor:acts.map(a=>a.fcMed>=130?'#E24B4A':a.fcMed>=115?'#fb923c':'#1D9E75'),tension:0.3,fill:true},
+    {data:acts.map(a=>a.fcMax),borderColor:'rgba(226,75,74,0.35)',borderDash:[3,3],pointRadius:2,tension:0.3,borderWidth:1.5}
+  ]},options:{...xRotO(),scales:{x:{ticks:{color:t.tx,font:{size:9},maxRotation:45,autoSkip:false},grid:{color:t.gr},border:{display:false}},y:{min:80,max:200,ticks:{color:t.tx,font:{size:10}},grid:{color:t.gr},border:{display:false}}}}});
+
+  // Ritmo
+  function r2m(r){if(!r||r==='—')return null;const[m,s]=r.split(':').map(Number);return m+s/60;}
+  const rd=acts.map(a=>r2m(a.ritmo));
+  dc('cRitmo');
+  charts['cRitmo']=new Chart(document.getElementById('cRitmo'),{type:'bar',data:{labels:lbs,datasets:[{data:rd,backgroundColor:rd.map(v=>v===null?'transparent':v<=12?'rgba(29,158,117,0.65)':v<=14?'rgba(55,138,221,0.55)':'rgba(186,117,23,0.55)'),borderRadius:4,borderSkipped:false}]},options:{...xRotO(),scales:{x:{ticks:{color:t.tx,font:{size:9},maxRotation:45,autoSkip:false},grid:{color:t.gr},border:{display:false}},y:{min:8,ticks:{color:t.tx,font:{size:10},callback:v=>{const m=Math.floor(v),s=Math.round((v-m)*60);return m+':'+(s<10?'0':'')+s}},grid:{color:t.gr},border:{display:false}}}}});
+
+  // Calorías
+  dc('cCal');
+  charts['cCal']=new Chart(document.getElementById('cCal'),{type:'bar',data:{labels:lbs,datasets:[{data:acts.map(a=>a.cal),backgroundColor:acts.map(a=>a.cal>=200?'rgba(234,88,12,0.7)':'rgba(251,191,36,0.65)'),borderRadius:4,borderSkipped:false}]},options:xRotO()});
+
+  // Ascenso
+  dc('cAsc');
+  charts['cAsc']=new Chart(document.getElementById('cAsc'),{type:'bar',data:{labels:lbs,datasets:[{data:acts.map(a=>a.asc),backgroundColor:acts.map(a=>a.asc>=80?'rgba(234,88,12,0.7)':a.asc>=40?'rgba(251,191,36,0.65)':'rgba(55,138,221,0.5)'),borderRadius:4,borderSkipped:false}]},options:{...xRotO(),scales:{x:{ticks:{color:t.tx,font:{size:9},maxRotation:45,autoSkip:false},grid:{color:t.gr},border:{display:false}},y:{ticks:{color:t.tx,font:{size:10},callback:v=>v+'m'},grid:{color:t.gr},border:{display:false}}}}});
+
+  // Pasos
+  dc('cPasosA');
+  charts['cPasosA']=new Chart(document.getElementById('cPasosA'),{type:'bar',data:{labels:lbs,datasets:[{data:acts.map(a=>a.pasos),backgroundColor:'rgba(124,58,237,0.5)',borderRadius:4,borderSkipped:false}]},options:xRotO()});
+
+  // Lista
+  document.getElementById('actList').innerHTML=acts.map(a=>`
+    <div class="ali">
+      <div class="ali-hdr">
+        <span class="ali-t">${a.titulo}</span>
+        <span class="ali-d">${new Date(a.fecha+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'})}</span>
+      </div>
+      <div class="ali-m">
+        ${a.dist>0?`<div class="alm"><span class="alm-v">${(+a.dist).toFixed(2)}</span><span class="alm-l">km</span></div>`:''}
+        <div class="alm"><span class="alm-v">${a.tiempo}</span><span class="alm-l">tiempo</span></div>
+        <div class="alm"><span class="alm-v">${a.fcMed}</span><span class="alm-l">FC med</span></div>
+        <div class="alm"><span class="alm-v">${a.cal}</span><span class="alm-l">kcal</span></div>
+        ${a.ritmo!=='—'?`<div class="alm"><span class="alm-v">${a.ritmo}</span><span class="alm-l">min/km</span></div>`:''}
+        <div class="alm"><span class="alm-v">${a.asc}</span><span class="alm-l">m↑</span></div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// RENDER ESTADÍSTICAS
+// ════════════════════════════════════════════
+function getPeriodDates(n){const d=[];for(let i=n-1;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(dk(x));}return d;}
+function setPeriod(n,btn){currentPeriod=n;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderStats();}
+
+function renderStats(){
+  const data=ld(), dates=getPeriodDates(currentPeriod);
+  const lbs=dates.map(d=>new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
+  const t=th();
+
+  const pesoArr=dates.map(d=>{
+    if(data[d]?.peso) return data[d].peso;
+    const ref=PESO_2026.find(p=>p.f===d);
+    return ref?ref.v:null;
+  });
+  const pma7=mavg(pesoArr,7);
+  const avg=arr=>{const v=arr.filter(x=>x!=null);return v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):null;};
+
+  const fcActual=GARMIN.fcReposo[GARMIN.fcReposo.length-1];
+  const pasosUlt=GARMIN.pasosSemanales[GARMIN.pasosSemanales.length-1].v;
+
+  document.getElementById('statsCards').innerHTML=`
+    <div class="scard"><div class="slbl">Peso medio</div><div class="sval">${avg(pesoArr)||'—'}<span> kg</span></div><div class="ssub">últimos ${currentPeriod}d</div></div>
+    <div class="scard"><div class="slbl">FC reposo actual</div><div class="sval">${fcActual}<span> ppm</span></div><div class="ssub">semana 15 Jun</div></div>
+    <div class="scard"><div class="slbl">Pasos últ. semana</div><div class="sval">${(pasosUlt/1000).toFixed(1)}<span>k</span></div><div class="ssub">sem. 15 Jun</div></div>
+    <div class="scard"><div class="slbl">Actividades (mes)</div><div class="sval">20</div><div class="ssub">jun 2026</div></div>`;
+
+  dc('cPeso');
+  charts['cPeso']=new Chart(document.getElementById('cPeso'),{type:'line',data:{labels:lbs,datasets:[
+    {label:'Peso',data:pesoArr,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',pointRadius:3,pointBackgroundColor:'#378ADD',tension:0.35,spanGaps:true,fill:true},
+    {label:'Media 7d',data:pma7,borderColor:'#E24B4A',borderDash:[5,3],pointRadius:0,tension:0.4,spanGaps:true,borderWidth:1.5}
+  ]},options:baseO()});
+
+  const calSlice=GARMIN.calorias.slice(-Math.ceil(currentPeriod/7));
+  dc('cCalSem');
+  charts['cCalSem']=new Chart(document.getElementById('cCalSem'),{type:'bar',data:{labels:calSlice.map(x=>x.w),datasets:[{data:calSlice.map(x=>x.v),backgroundColor:calSlice.map(x=>x.v>=3000?'rgba(234,88,12,0.7)':x.v>=2000?'rgba(55,138,221,0.6)':'rgba(55,138,221,0.35)'),borderRadius:4,borderSkipped:false}]},options:baseO()});
+
+  // Calendario carnívora
+  const cal=document.getElementById('carniCal');
+  const days=['L','M','X','J','V','S','D'];
+  let html=days.map(d=>`<div style="text-align:center;font-size:10px;color:var(--t3);padding-bottom:2px">${d}</div>`).join('');
+  for(let i=27;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=dk(d), ok=data[k]?.carnivore;
+    const col=ok===true?'#1a7a4a':ok===false?'#d32f2f':'var(--ibd)';
+    const op=ok===undefined?0.25:1;
+    html+=`<div title="${k}" style="aspect-ratio:1;border-radius:6px;background:${col};opacity:${op}"></div>`;
+  }
+  cal.innerHTML=html;
+}
+
+// ════════════════════════════════════════════
+// LOGROS
+// ════════════════════════════════════════════
+function renderLogros(){
+  const maxW=GARMIN.pasosSemanales.reduce((b,a)=>a.v>b.v?a:b);
+  const minFC=GARMIN.fcReposo.reduce((b,v,i)=>v<b.v?{v,i}:b,{v:999,i:0});
+  const maxDist=GARMIN.acts.filter(a=>a.dist>0).reduce((b,a)=>a.dist>b.dist?a:b);
+  const maxCal=GARMIN.acts.reduce((b,a)=>a.cal>b.cal?a:b);
+  const maxAsc=GARMIN.acts.reduce((b,a)=>a.asc>b.asc?a:b);
+
+  document.getElementById('logrRec').innerHTML=`<div class="ctitle">Récords — Garmin</div>
+    <div class="sr"><div><span class="sname">Semana más activa</span><div style="font-size:11px;color:var(--t3);margin-top:1px">Sem. ${maxW.w}</div></div><span class="sval2 good">${maxW.v.toLocaleString('es-ES')} pasos</span></div>
+    <div class="sr"><div><span class="sname">FC reposo mínima histórica</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${GARMIN.fcReposoLabels[minFC.i]}</div></div><span class="sval2 good">${minFC.v} ppm</span></div>
+    <div class="sr"><div><span class="sname">Mayor distancia actividad</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${maxDist.fecha}</div></div><span class="sval2 good">${(+maxDist.dist).toFixed(2)} km</span></div>
+    <div class="sr"><div><span class="sname">Más calorías en actividad</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${maxCal.fecha}</div></div><span class="sval2 good">${maxCal.cal} kcal</span></div>
+    <div class="sr"><div><span class="sname">Mayor ascenso actividad</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${maxAsc.fecha}</div></div><span class="sval2 good">${maxAsc.asc} m</span></div>`;
+
+  const data=ld(), keys=Object.keys(data);
+  const allIds=SUPLS.flatMap(g=>g.items.map(s=>s.id));
+  const suplNames=Object.fromEntries(SUPLS.flatMap(g=>g.items.map(s=>[s.id,s.n])));
+  const daysWithSupl=keys.filter(k=>data[k].suplMissed!==undefined);
+  const adh=allIds.map(id=>{
+    if(!daysWithSupl.length) return {id,pct:100};
+    const miss=daysWithSupl.filter(k=>(data[k].suplMissed||[]).includes(id)).length;
+    return {id,pct:Math.round(((daysWithSupl.length-miss)/daysWithSupl.length)*100)};
+  }).sort((a,b)=>a.pct-b.pct);
+  const media=Math.round(adh.reduce((s,a)=>s+a.pct,0)/adh.length);
+
+  document.getElementById('logrSupl').innerHTML=`<div class="ctitle">Adherencia suplementos${daysWithSupl.length?` (${daysWithSupl.length}d registrados)`:' — sin datos aún'}</div>
+    ${adh.slice(0,5).map(s=>`<div class="sr"><span class="sname">${suplNames[s.id]}</span><span class="sval2 ${s.pct>=80?'good':''}">${s.pct}%</span></div>`).join('')}
+    <div class="sr"><span class="sname" style="color:var(--t3);font-size:13px">Media general</span><span class="sval2 good">${media}%</span></div>`;
+}
+
+// ════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════
+function showTab(tab,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='actividades') renderActividades();
+  if(tab==='suplementos') renderSupl();
+  if(tab==='stats') renderStats();
+  if(tab==='logros') renderLogros();
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+setupProxy();
+document.getElementById('dateLabel').textContent=fmtDate(currentDate);
+loadDay();
+</script>
+</body>
+</html>
