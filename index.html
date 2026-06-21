@@ -191,22 +191,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
 
     <div class="card">
-      <div class="ctitle">Importar actividad Garmin</div>
-      <div class="imp-zone" id="dropZone">
-        <input type="file" accept="image/*" multiple id="fileInput" onchange="onFiles(this.files)">
-        <div class="imp-inner">
-          <div class="imp-icon">📷</div>
-          <div>
-            <div class="imp-main">Subir capturas de Garmin Connect</div>
-            <div class="imp-sub">1 o 2 fotos · Resumen y/o Estadísticas</div>
-          </div>
+      <div class="ctitle">Añadir actividad Garmin</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0 4px">
+        <span style="font-size:28px">📷</span>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--t1)">Envía las capturas al chat</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">Abre un nuevo chat · escribe "nueva actividad" · adjunta 1-2 fotos de Garmin Connect</div>
         </div>
-        <div class="imp-thumbs" id="thumbRow"></div>
       </div>
-      <button class="ext-btn" id="extBtn" onclick="extractGarmin()" disabled>
-        <span id="extIcon">✦</span><span id="extTxt">Extraer datos con IA</span>
-      </button>
-      <div id="extRes"></div>
     </div>
 
     <div class="card">
@@ -365,7 +357,7 @@ const GARMIN = {
     {w:'8Jun',v:2186},{w:'15Jun',v:1965}
   ],
   acts: [
-    {tipo:'Caminar',titulo:'Marinha Grande',fecha:'2026-06-21',dist:5.05,cal:265,tiempo:'1:08',fcMed:98,fcMax:118,cad:101,ritmo:'13:32',pasos:7238,asc:9,te:2.2},
+    {tipo:'Caminar',titulo:'Marinha Grande Caminar',fecha:'2026-06-21',dist:6.54,cal:334,tiempo:'1:18:23',fcMed:93,fcMax:122,cad:96,ritmo:'11:59',pasos:8158,asc:9,te:2.2},
     {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-20',dist:2.88,cal:158,tiempo:'0:31',fcMed:132,fcMax:169,cad:103,ritmo:'10:57',pasos:3446,asc:41,te:2.4},
     {tipo:'Caminar',titulo:'La Coruña AM',fecha:'2026-06-20',dist:2.50,cal:136,tiempo:'0:27',fcMed:120,fcMax:141,cad:106,ritmo:'10:49',pasos:2904,asc:40,te:2.3},
     {tipo:'Caminar',titulo:'La Coruña',fecha:'2026-06-17',dist:3.87,cal:229,tiempo:'0:46',fcMed:135,fcMax:165,cad:101,ritmo:'11:51',pasos:4922,asc:92,te:3.1},
