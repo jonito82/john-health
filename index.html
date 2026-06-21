@@ -4,113 +4,208 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="John Health">
-<meta name="theme-color" content="#ffffff">
-<title>John Health</title>
+<meta name="theme-color" content="#0f0f0f">
+<title>John Health v2</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
-.app { max-width: 480px; margin: 0 auto; padding: 0 0 90px; min-height: 100vh; background: #f5f5f5; }
-.header { padding: 56px 16px 14px; background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-.header h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; }
-.date-nav { display: flex; align-items: center; gap: 4px; }
-.date-btn { background: none; border: none; cursor: pointer; color: #888; font-size: 22px; padding: 4px 10px; line-height: 1; }
-.date-label { font-size: 13px; color: #666; min-width: 118px; text-align: center; }
-.nav { display: flex; background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); position: sticky; top: 91px; z-index: 9; }
-.nav-btn { flex: 1; padding: 13px 0; font-size: 13px; color: #888; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; }
-.nav-btn.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 600; }
-.section { display: none; padding: 16px; }
-.section.active { display: block; }
-.card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-.card-title { font-size: 11px; color: #999; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-.metric-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.metric-row:last-child { margin-bottom: 0; }
-.metric-label { font-size: 15px; color: #1a1a1a; flex: 1; }
-.metric-input { width: 100px; text-align: right; border: 1px solid #e0e0e0; border-radius: 10px; padding: 8px 10px; font-size: 16px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; }
-.metric-input:focus { border-color: #007AFF; background: #fff; }
-.metric-unit { font-size: 13px; color: #999; width: 32px; }
-.toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.toggle-item { display: flex; align-items: center; justify-content: space-between; background: #fafafa; border-radius: 10px; padding: 12px 14px; border: 1px solid #e8e8e8; cursor: pointer; transition: all 0.15s; }
-.toggle-item.on-bad { background: #fff2f2; border-color: #ffcdd2; }
-.toggle-item.on-bad .toggle-label { color: #d32f2f; }
-.toggle-item.on-bad .toggle-dot { background: #d32f2f; }
-.toggle-item.on-good { background: #f0faf4; border-color: #b2dfcc; }
-.toggle-item.on-good .toggle-label { color: #1a7a4a; }
-.toggle-item.on-good .toggle-dot { background: #1a7a4a; }
-.toggle-label { font-size: 14px; color: #666; }
-.toggle-dot { width: 9px; height: 9px; border-radius: 50%; background: #ccc; transition: background 0.15s; }
-.fast-display { text-align: center; padding: 6px 0 4px; }
-.fast-hours { font-size: 42px; font-weight: 300; color: #1a1a1a; line-height: 1; letter-spacing: -1px; }
-.fast-sub { font-size: 13px; color: #999; margin-top: 4px; }
-.fast-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-.fast-field { display: flex; flex-direction: column; gap: 5px; }
-.fast-field label { font-size: 12px; color: #999; font-weight: 500; }
-.fast-field input { border: 1px solid #e0e0e0; border-radius: 10px; padding: 9px 10px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; width: 100%; }
-.fast-field input:focus { border-color: #007AFF; background: #fff; }
-.save-btn { width: 100%; padding: 15px; background: #1a1a1a; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 4px; transition: opacity 0.15s; }
-.save-btn:active { opacity: 0.75; }
-.saved-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 11px 22px; border-radius: 22px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; white-space: nowrap; }
-.saved-toast.show { opacity: 1; }
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.stat-card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-.stat-label { font-size: 11px; color: #999; margin-bottom: 5px; font-weight: 500; }
-.stat-val { font-size: 24px; font-weight: 600; color: #1a1a1a; line-height: 1; }
-.stat-val span { font-size: 14px; font-weight: 400; color: #999; }
-.stat-sub { font-size: 11px; color: #bbb; margin-top: 3px; }
-.chart-wrap { position: relative; width: 100%; height: 180px; }
-.period-sel { display: flex; gap: 6px; margin-bottom: 12px; }
-.period-btn { padding: 6px 14px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 13px; background: #fff; cursor: pointer; color: #666; font-family: inherit; font-weight: 500; }
-.period-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.notes-input { width: 100%; border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; resize: none; height: 76px; outline: none; }
-.notes-input:focus { border-color: #007AFF; background: #fff; }
-.streak-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
-.streak-row:last-child { border-bottom: none; }
-.streak-name { font-size: 14px; color: #1a1a1a; }
-.streak-val { font-size: 14px; font-weight: 600; color: #999; }
-.streak-val.good { color: #1a7a4a; }
-.legend { display: flex; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #999; }
-.legend-dot { width: 10px; height: 3px; border-radius: 2px; }
-@media (prefers-color-scheme: dark) {
-  body, .app { background: #111; color: #f0f0f0; }
-  .header, .nav { background: #1c1c1e; border-color: rgba(255,255,255,0.08); }
-  .header h1 { color: #f0f0f0; }
-  .date-label { color: #aaa; }
-  .date-btn { color: #aaa; }
-  .nav-btn { color: #666; }
-  .nav-btn.active { color: #f0f0f0; border-bottom-color: #f0f0f0; }
-  .card, .stat-card { background: #1c1c1e; box-shadow: none; border: 0.5px solid rgba(255,255,255,0.06); }
-  .card-title, .stat-label { color: #666; }
-  .metric-label, .streak-name { color: #f0f0f0; }
-  .metric-input, .fast-field input, .notes-input { background: #2c2c2e; border-color: rgba(255,255,255,0.1); color: #f0f0f0; }
-  .metric-unit, .fast-sub, .stat-sub { color: #666; }
-  .toggle-item { background: #2c2c2e; border-color: rgba(255,255,255,0.08); }
-  .toggle-label { color: #aaa; }
-  .toggle-dot { background: #444; }
-  .toggle-item.on-bad { background: #2d1a1a; border-color: #5a2020; }
-  .toggle-item.on-bad .toggle-label { color: #ff6b6b; }
-  .toggle-item.on-bad .toggle-dot { background: #ff6b6b; }
-  .toggle-item.on-good { background: #1a2d22; border-color: #1a4a30; }
-  .toggle-item.on-good .toggle-label { color: #4caf7d; }
-  .toggle-item.on-good .toggle-dot { background: #4caf7d; }
-  .fast-hours, .stat-val { color: #f0f0f0; }
-  .save-btn { background: #f0f0f0; color: #1a1a1a; }
-  .saved-toast { background: #f0f0f0; color: #1a1a1a; }
-  .period-btn { background: #2c2c2e; border-color: rgba(255,255,255,0.1); color: #aaa; }
-  .period-btn.active { background: #f0f0f0; color: #1a1a1a; border-color: #f0f0f0; }
-  .streak-row { border-color: rgba(255,255,255,0.06); }
-  .streak-val { color: #666; }
-  .streak-val.good { color: #4caf7d; }
-  .stat-val span { color: #666; }
-  .legend-item { color: #666; }
+:root {
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --surface2: #222;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0f0f0;
+  --text2: #888;
+  --text3: #555;
+  --accent: #c8f53e;
+  --accent-dim: rgba(200,245,62,0.12);
+  --accent-dim2: rgba(200,245,62,0.06);
+  --red: #ff5a5a;
+  --red-dim: rgba(255,90,90,0.12);
+  --amber: #f0a940;
+  --amber-dim: rgba(240,169,64,0.12);
+  --blue: #5aabff;
+  --blue-dim: rgba(90,171,255,0.12);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --teal: #2dd4bf;
+  --radius: 14px;
+  --radius-sm: 10px;
 }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding-bottom: 90px; }
+
+.header {
+  padding: 54px 16px 12px; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.header-title { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; }
+.header-sub { font-size: 12px; color: var(--text3); letter-spacing: 0.04em; }
+.date-nav { display: flex; align-items: center; gap: 2px; }
+.date-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 22px; padding: 4px 10px; line-height: 1; }
+.date-label { font-size: 12px; color: var(--text2); min-width: 110px; text-align: center; }
+
+.nav { display: flex; background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 91px; z-index: 19; overflow-x: auto; }
+.nav::-webkit-scrollbar { display: none; }
+.nav-btn { flex: none; padding: 12px 16px; font-size: 13px; color: var(--text3); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.section { display: none; padding: 14px; }
+.section.active { display: block; }
+
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; border: 1px solid var(--border); }
+.card-title { font-size: 10px; color: var(--text3); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
+.metric-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.metric-row:last-child { margin-bottom: 0; }
+.metric-label { font-size: 15px; color: var(--text); flex: 1; }
+.metric-input { width: 96px; text-align: right; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 16px; font-family: inherit; color: var(--text); background: var(--surface2); outline: none; }
+.metric-input:focus { border-color: var(--accent); }
+.metric-unit { font-size: 12px; color: var(--text3); }
+
+/* DIET TOGGLE */
+.diet-toggle { width: 100%; padding: 18px 20px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s; margin-bottom: 10px; }
+.diet-toggle.ok { border-color: rgba(200,245,62,0.4); background: var(--accent-dim2); }
+.diet-toggle.skip { border-color: rgba(255,90,90,0.4); background: var(--red-dim); }
+.diet-toggle-left { display: flex; flex-direction: column; gap: 3px; }
+.diet-toggle-label { font-size: 17px; font-weight: 600; }
+.diet-toggle.ok .diet-toggle-label { color: var(--accent); }
+.diet-toggle.skip .diet-toggle-label { color: var(--red); }
+.diet-toggle-sub { font-size: 12px; color: var(--text3); }
+.diet-pill { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.diet-toggle.ok .diet-pill { background: var(--accent-dim); color: var(--accent); }
+.diet-toggle.skip .diet-pill { background: var(--red-dim); color: var(--red); }
+
+/* SUPPS */
+.supp-section-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin: 10px 0 6px; padding: 0 2px; }
+.supp-grid { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.supp-item { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: all 0.12s; }
+.supp-item.missed { background: var(--red-dim); border-color: rgba(255,90,90,0.2); }
+.supp-item-info { display: flex; flex-direction: column; gap: 2px; }
+.supp-name { font-size: 14px; color: var(--text); }
+.supp-dose { font-size: 11px; color: var(--text3); }
+.supp-item.missed .supp-name { color: var(--red); text-decoration: line-through; opacity: 0.7; }
+.supp-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--text3); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.supp-item.missed .supp-check { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* GARMIN */
+.garmin-badge { font-size: 10px; color: var(--accent); background: var(--accent-dim); padding: 2px 7px; border-radius: 6px; font-weight: 600; letter-spacing: 0.04em; margin-left: 8px; }
+.activity-list { display: flex; flex-direction: column; gap: 6px; }
+.activity-item { display: flex; align-items: center; gap: 12px; padding: 11px 13px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.activity-icon { font-size: 18px; width: 32px; text-align: center; flex-shrink: 0; }
+.activity-info { flex: 1; }
+.activity-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.activity-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.activity-stat { text-align: right; }
+.activity-dist { font-size: 15px; font-weight: 600; color: var(--accent); }
+.activity-cal { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+/* NOTAS */
+.notes-input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: inherit; color: var(--text); background: var(--surface2); resize: none; height: 72px; outline: none; }
+.notes-input:focus { border-color: var(--accent); }
+
+/* SAVE */
+.save-btn { width: 100%; padding: 16px; background: var(--accent); color: #0f0f0f; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 4px; letter-spacing: -0.3px; transition: opacity 0.15s; }
+.save-btn:active { opacity: 0.8; }
+
+.saved-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #0f0f0f; padding: 11px 22px; border-radius: 22px; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; white-space: nowrap; }
+.saved-toast.show { opacity: 1; }
+
+/* STATS */
+.period-sel { display: flex; gap: 6px; margin-bottom: 12px; }
+.period-btn { padding: 7px 14px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; background: var(--surface); cursor: pointer; color: var(--text2); font-family: inherit; font-weight: 500; }
+.period-btn.active { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 700; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 14px; border: 1px solid var(--border); }
+.stat-label { font-size: 10px; color: var(--text3); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.stat-val { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: -1px; }
+.stat-val span { font-size: 13px; font-weight: 400; color: var(--text3); letter-spacing: 0; }
+.stat-trend { font-size: 11px; margin-top: 4px; color: var(--text3); }
+.stat-trend.good { color: var(--accent); }
+.stat-trend.warn { color: var(--amber); }
+.chart-wrap { position: relative; width: 100%; height: 170px; }
+.legend { display: flex; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.legend-dot { width: 12px; height: 2px; border-radius: 2px; }
+
+/* SLEEP SECTION */
+.sleep-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.sleep-stat { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 14px; border: 1px solid var(--border); }
+.sleep-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; }
+.sleep-stat-val { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+.sleep-stat-val span { font-size: 12px; font-weight: 400; color: var(--text3); }
+.sleep-stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* SLEEP PHASES */
+.phases-bar { display: flex; height: 20px; border-radius: 6px; overflow: hidden; gap: 2px; margin: 10px 0 6px; }
+.phase-seg { height: 100%; border-radius: 3px; }
+.phases-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+.phase-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.phase-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* FC SUEÑO */
+.hr-sleep-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.hr-sleep-bar:last-child { border-bottom: none; }
+.hr-sleep-label { font-size: 12px; color: var(--text3); min-width: 60px; }
+.hr-sleep-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; position: relative; }
+.hr-sleep-fill { height: 100%; border-radius: 2px; background: var(--red); }
+.hr-sleep-val { font-size: 12px; font-weight: 600; color: var(--text2); min-width: 50px; text-align: right; }
+
+/* STREAKS */
+.streak-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.streak-row:last-child { border-bottom: none; }
+.streak-name { font-size: 14px; color: var(--text); }
+.streak-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.streak-val { font-size: 15px; font-weight: 700; color: var(--text3); }
+.streak-val.good { color: var(--accent); }
+.streak-val.warn { color: var(--amber); }
+
+/* CARNIVORE CAL */
+.carnivore-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+.cal-day { aspect-ratio: 1; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.cal-day.ok { background: var(--accent-dim); color: var(--accent); }
+.cal-day.skip { background: var(--red-dim); color: var(--red); }
+.cal-day.empty { background: var(--surface2); color: var(--text3); }
+.cal-legend { display: flex; gap: 12px; margin-top: 6px; }
+.cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.cal-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* COMPLIANCE */
+.compliance-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.compliance-row:last-child { border-bottom: none; }
+.compliance-name { font-size: 13px; color: var(--text); flex: 1; }
+.compliance-bar-wrap { width: 80px; height: 4px; background: var(--surface2); border-radius: 2px; }
+.compliance-bar { height: 100%; border-radius: 2px; background: var(--accent); }
+.compliance-pct { font-size: 12px; font-weight: 600; color: var(--text2); min-width: 32px; text-align: right; }
+
+/* SCORE */
+.score-card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 20px; }
+.score-ring { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+.score-ring svg { transform: rotate(-90deg); }
+.score-ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--accent); }
+.score-info { flex: 1; }
+.score-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.score-sub { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+/* BODY BATTERY */
+.bb-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.bb-row:last-child { border-bottom: none; }
+.bb-date { font-size: 12px; color: var(--text3); min-width: 80px; }
+.bb-bar-wrap { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; }
+.bb-bar { height: 100%; border-radius: 3px; }
+.bb-val { font-size: 13px; font-weight: 600; min-width: 28px; text-align: right; }
 </style>
 </head>
 <body>
 <div class="app">
+
   <div class="header">
-    <h1>John Health</h1>
+    <div class="header-left">
+      <div class="header-title">John Health</div>
+      <div class="header-sub">A CORUÑA · 43 AÑOS</div>
+    </div>
     <div class="date-nav">
       <button class="date-btn" onclick="changeDay(-1)">‹</button>
       <span class="date-label" id="dateLabel"></span>
@@ -120,11 +215,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <div class="nav">
     <button class="nav-btn active" onclick="showTab('registro',this)">Registro</button>
+    <button class="nav-btn" onclick="showTab('garmin',this)">Garmin</button>
+    <button class="nav-btn" onclick="showTab('sueno',this)">Sueño</button>
+    <button class="nav-btn" onclick="showTab('suplementos',this)">Suplementos</button>
     <button class="nav-btn" onclick="showTab('stats',this)">Estadísticas</button>
-    <button class="nav-btn" onclick="showTab('rachas',this)">Logros</button>
+    <button class="nav-btn" onclick="showTab('logros',this)">Logros</button>
   </div>
 
+  <!-- ===== REGISTRO ===== -->
   <div id="tab-registro" class="section active">
+
+    <div class="diet-toggle ok" id="dietToggle" onclick="toggleDiet()">
+      <div class="diet-toggle-left">
+        <div class="diet-toggle-label" id="dietLabel">🥩 Dieta carnívora</div>
+        <div class="diet-toggle-sub" id="dietSub">Toca para marcar que te la has saltado</div>
+      </div>
+      <div class="diet-pill" id="dietPill">OK</div>
+    </div>
+
     <div class="card">
       <div class="card-title">Cuerpo</div>
       <div class="metric-row">
@@ -135,67 +243,200 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
 
     <div class="card">
-      <div class="card-title">Actividad</div>
-      <div class="metric-row">
-        <span class="metric-label">Pasos</span>
-        <input class="metric-input" type="number" inputmode="numeric" id="pasos" placeholder="—">
-        <span class="metric-unit">pasos</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Distancia</span>
-        <input class="metric-input" type="number" step="0.1" inputmode="decimal" id="km" placeholder="—">
-        <span class="metric-unit">km</span>
+      <div class="card-title">Actividades hoy <span class="garmin-badge">GARMIN</span></div>
+      <div class="activity-list" id="todayActivities">
+        <div style="font-size:13px;color:var(--text3);padding:4px 0">Sin actividades registradas hoy</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Ayuno</div>
-      <div class="fast-display">
-        <div class="fast-hours" id="fastHours">— h</div>
-        <div class="fast-sub">horas de ayuno</div>
-      </div>
-      <div class="fast-inputs">
-        <div class="fast-field">
-          <label>Última comida</label>
-          <input type="time" id="lastMeal" value="19:00">
-        </div>
-        <div class="fast-field">
-          <label>Primera comida hoy</label>
-          <input type="time" id="firstMeal" value="19:00">
-        </div>
-      </div>
+      <div class="card-title">Notas del día</div>
+      <textarea class="notes-input" id="notas" placeholder="Cómo te has sentido, síntomas…"></textarea>
     </div>
 
-    <div class="card">
-      <div class="card-title">¿Has tomado…?</div>
-      <div class="toggle-grid">
-        <div class="toggle-item" id="tog-gluten" onclick="toggleItem('gluten')">
-          <span class="toggle-label">Gluten</span>
-          <span class="toggle-dot"></span>
-        </div>
-        <div class="toggle-item" id="tog-lacteos" onclick="toggleItem('lacteos')">
-          <span class="toggle-label">Lácteos</span>
-          <span class="toggle-dot"></span>
-        </div>
-        <div class="toggle-item" id="tog-azucar" onclick="toggleItem('azucar')">
-          <span class="toggle-label">Azúcar</span>
-          <span class="toggle-dot"></span>
-        </div>
-        <div class="toggle-item on-good" id="tog-dieta" onclick="toggleItem('dieta')">
-          <span class="toggle-label">Dieta OK</span>
-          <span class="toggle-dot"></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Notas</div>
-      <textarea class="notes-input" id="notas" placeholder="Cómo te has sentido, algo destacable…"></textarea>
-    </div>
-
-    <button class="save-btn" onclick="saveDay()">Guardar</button>
+    <button class="save-btn" onclick="saveDay()">Guardar día</button>
   </div>
 
+  <!-- ===== GARMIN ===== -->
+  <div id="tab-garmin" class="section">
+
+    <div class="score-card">
+      <div class="score-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#222" stroke-width="8"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#c8f53e" stroke-width="8"
+            stroke-dasharray="201" stroke-dashoffset="50" stroke-linecap="round"/>
+        </svg>
+        <div class="score-ring-num">74</div>
+      </div>
+      <div class="score-info">
+        <div class="score-title">Estado general</div>
+        <div class="score-sub">Basado en FC reposo, sueño, actividad y pasos de los últimos 7 días.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">FC en reposo — histórico</div>
+      <div class="chart-wrap"><canvas id="chartFC"></canvas></div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Mínimo</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">46 <span style="font-size:12px;font-weight:400;color:var(--text3)">ppm</span></div>
+          <div style="font-size:10px;color:var(--text3)">ago 2025</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Actual</div>
+          <div style="font-size:20px;font-weight:700">53 <span style="font-size:12px;font-weight:400;color:var(--text3)">ppm</span></div>
+          <div style="font-size:10px;color:var(--text3)">jun 2026</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Media 12m</div>
+          <div style="font-size:20px;font-weight:700">51 <span style="font-size:12px;font-weight:400;color:var(--text3)">ppm</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Pasos semanales</div>
+      <div class="chart-wrap"><canvas id="chartPasos"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Descarga Body Battery — reciente</div>
+      <div class="bb-row"><div class="bb-date">21 Jun</div><div class="bb-bar-wrap"><div class="bb-bar" style="width:100%;background:var(--accent)"></div></div><div class="bb-val" style="color:var(--accent)">10</div></div>
+      <div class="bb-row"><div class="bb-date">20 Jun</div><div class="bb-bar-wrap"><div class="bb-bar" style="width:70%;background:var(--amber)"></div></div><div class="bb-val" style="color:var(--amber)">13</div></div>
+      <div class="bb-row"><div class="bb-date">17 Jun</div><div class="bb-bar-wrap"><div class="bb-bar" style="width:60%;background:var(--amber)"></div></div><div class="bb-val" style="color:var(--amber)">6</div></div>
+      <div class="bb-row"><div class="bb-date">16 Jun</div><div class="bb-bar-wrap"><div class="bb-bar" style="width:60%;background:var(--amber)"></div></div><div class="bb-val" style="color:var(--amber)">6</div></div>
+      <div class="bb-row"><div class="bb-date">15 Jun</div><div class="bb-bar-wrap"><div class="bb-bar" style="width:100%;background:var(--accent)"></div></div><div class="bb-val" style="color:var(--accent)">10</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Actividades recientes</div>
+      <div class="activity-list" id="recentActivities"></div>
+    </div>
+  </div>
+
+  <!-- ===== SUEÑO ===== -->
+  <div id="tab-sueno" class="section">
+
+    <!-- resumen semana actual -->
+    <div class="card">
+      <div class="card-title">Esta semana · 15–21 jun 2026</div>
+      <div class="sleep-summary-grid">
+        <div class="sleep-stat">
+          <div class="sleep-stat-label">En cama</div>
+          <div class="sleep-stat-val">7h <span>23min</span></div>
+          <div class="sleep-stat-sub">Objetivo: 8h</div>
+        </div>
+        <div class="sleep-stat">
+          <div class="sleep-stat-label">Durmiendo</div>
+          <div class="sleep-stat-val">6h <span>51min</span></div>
+          <div class="sleep-stat-sub">-17min vs mayo</div>
+        </div>
+        <div class="sleep-stat">
+          <div class="sleep-stat-label">Se duerme</div>
+          <div class="sleep-stat-val" style="font-size:17px">22:28</div>
+          <div class="sleep-stat-sub">anoche 22:25</div>
+        </div>
+        <div class="sleep-stat">
+          <div class="sleep-stat-label">Se despierta</div>
+          <div class="sleep-stat-val" style="font-size:17px">6:38</div>
+          <div class="sleep-stat-sub">horario habitual</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- fases -->
+    <div class="card">
+      <div class="card-title">Fases del sueño · media mensual</div>
+      <div class="phases-bar">
+        <div class="phase-seg" style="flex:26;background:#f97316;opacity:.8"></div>
+        <div class="phase-seg" style="flex:100;background:#818cf8"></div>
+        <div class="phase-seg" style="flex:285;background:#3b82f6"></div>
+        <div class="phase-seg" style="flex:45;background:#1e3a8a"></div>
+      </div>
+      <div class="phases-legend">
+        <div class="phase-legend-item"><div class="phase-dot" style="background:#f97316"></div>Vigilia · 26 min (6%)</div>
+        <div class="phase-legend-item"><div class="phase-dot" style="background:#818cf8"></div>REM · 1h 40min (22%)</div>
+        <div class="phase-legend-item"><div class="phase-dot" style="background:#3b82f6"></div>Esencial · 4h 45min (62%)</div>
+        <div class="phase-legend-item"><div class="phase-dot" style="background:#1e3a8a"></div>Profundo · 45 min (10%)</div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="card-title" style="margin-bottom:8px">Esta semana</div>
+        <div class="phases-bar">
+          <div class="phase-seg" style="flex:31;background:#f97316;opacity:.8"></div>
+          <div class="phase-seg" style="flex:101;background:#818cf8"></div>
+          <div class="phase-seg" style="flex:259;background:#3b82f6"></div>
+          <div class="phase-seg" style="flex:51;background:#1e3a8a"></div>
+        </div>
+        <div class="phases-legend">
+          <div class="phase-legend-item"><div class="phase-dot" style="background:#f97316"></div>Vigilia · 31 min (7%)</div>
+          <div class="phase-legend-item"><div class="phase-dot" style="background:#818cf8"></div>REM · 1h 41min (23%)</div>
+          <div class="phase-legend-item"><div class="phase-dot" style="background:#3b82f6"></div>Esencial · 4h 19min (58%)</div>
+          <div class="phase-legend-item"><div class="phase-dot" style="background:#1e3a8a"></div>Profundo · 51 min (12%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FC durante sueño -->
+    <div class="card">
+      <div class="card-title">FC durante el sueño · anoche</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Mínima</div>
+          <div style="font-size:24px;font-weight:700;color:var(--blue)">50 <span style="font-size:12px;font-weight:400;color:var(--text3)">ppm</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Rango</div>
+          <div style="font-size:18px;font-weight:700">48–91 <span style="font-size:12px;font-weight:400;color:var(--text3)">ppm</span></div>
+          <div style="font-size:10px;color:var(--text3)">mes</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Máxima</div>
+          <div style="font-size:24px;font-weight:700;color:var(--red)">77 <span style="font-size:12px;font-weight:400;color:var(--text3)">ppm</span></div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:110px"><canvas id="chartHRSleep"></canvas></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text3)">
+        <span>22:00</span><span>0:00</span><span>3:00</span><span>6:03</span>
+      </div>
+    </div>
+
+    <!-- tendencia semanal -->
+    <div class="card">
+      <div class="card-title">Duración semanal — últimas 12 semanas</div>
+      <div class="chart-wrap"><canvas id="chartSueno"></canvas></div>
+    </div>
+
+    <!-- insight -->
+    <div class="card" style="background:var(--accent-dim2);border-color:rgba(200,245,62,0.12)">
+      <div class="card-title" style="color:var(--accent)">Observaciones</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">
+        Sueño profundo esta semana: <strong style="color:var(--text)">51 min (12%)</strong>, por encima de la media mensual de 45 min (10%). REM estable ~1h 40min. La principal brecha con el objetivo de 8h es la hora de acostarse, que se retrasa habitualmente a las 22:30–0:30.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SUPLEMENTOS ===== -->
+  <div id="tab-suplementos" class="section">
+    <div class="card" style="margin-bottom:6px;background:var(--accent-dim2);border-color:rgba(200,245,62,0.12)">
+      <div style="font-size:13px;color:var(--text3);line-height:1.5">
+        Por defecto todo está <span style="color:var(--accent);font-weight:600">tomado</span>. Toca lo que hayas <span style="color:var(--red)">olvidado o saltado</span>.
+      </div>
+    </div>
+    <div class="supp-section-label">☀️ En ayunas — al despertar</div>
+    <div class="supp-grid" id="supp-ayunas"></div>
+    <div class="supp-section-label">🍽 Comida principal ~12:30–13:00</div>
+    <div class="supp-grid" id="supp-comida"></div>
+    <div class="supp-section-label">🌙 Antes de dormir</div>
+    <div class="supp-grid" id="supp-noche"></div>
+    <div class="supp-section-label">🧂 A lo largo del día</div>
+    <div class="supp-grid" id="supp-dia"></div>
+    <button class="save-btn" onclick="saveDay()" style="margin-top:10px">Guardar</button>
+  </div>
+
+  <!-- ===== ESTADÍSTICAS ===== -->
   <div id="tab-stats" class="section">
     <div class="period-sel">
       <button class="period-btn active" onclick="setPeriod(7,this)">7 días</button>
@@ -206,125 +447,264 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div class="card">
       <div class="card-title">Evolución del peso</div>
       <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#378ADD;height:2px"></span>Peso</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#E24B4A;height:2px;border-top:2px dashed #E24B4A;background:none;width:14px"></span>Media 7d</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;height:2px;border-top:2px dashed #1D9E75;background:none;width:14px"></span>Media 30d</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#5aabff"></span>Peso</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#c8f53e"></span>Media 7d</span>
       </div>
-      <div class="chart-wrap"><canvas id="chartPeso" role="img" aria-label="Evolución del peso"></canvas></div>
+      <div class="chart-wrap"><canvas id="chartPeso"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">Pasos diarios</div>
-      <div class="chart-wrap"><canvas id="chartPasos" role="img" aria-label="Pasos diarios"></canvas></div>
+      <div class="card-title">Dieta carnívora — últimos 28 días</div>
+      <div class="carnivore-cal" id="carnivoreCal"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--accent-dim)"></div>Carnívora</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--red-dim)"></div>Saltada</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--surface2)"></div>Sin dato</div>
+      </div>
     </div>
     <div class="card">
-      <div class="card-title">Km caminados</div>
-      <div class="chart-wrap"><canvas id="chartKm" role="img" aria-label="Km caminados"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Horas de ayuno</div>
-      <div class="chart-wrap"><canvas id="chartAyuno" role="img" aria-label="Horas de ayuno"></canvas></div>
+      <div class="card-title">Adherencia suplementos (últimos 30d)</div>
+      <div id="suppCompliance"></div>
     </div>
   </div>
 
-  <div id="tab-rachas" class="section">
+  <!-- ===== LOGROS ===== -->
+  <div id="tab-logros" class="section">
     <div class="card" id="rachasCard"></div>
     <div class="card" id="recordsCard"></div>
+    <div class="card">
+      <div class="card-title">FC reposo — evolución</div>
+      <div class="streak-row"><span class="streak-name">Mejor (ago 2025)</span><span class="streak-val good">46 ppm</span></div>
+      <div class="streak-row"><span class="streak-name">Actual (jun 2026)</span><span class="streak-val">53 ppm</span></div>
+      <div class="streak-row"><span class="streak-name">vs mejor mes</span><span class="streak-val warn">+7 ppm</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5">
+        FC en reposo subió ~7 ppm desde el mínimo histórico. Puede correlacionar con menor volumen de actividad aeróbica en los meses de invierno.
+      </div>
+    </div>
     <div class="card" id="dietaResumen"></div>
   </div>
-</div>
 
+</div>
 <div class="saved-toast" id="toast">✓ Guardado</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const GARMIN_ACTIVITIES = [
+  { date:'2026-06-21', type:'walk', title:'Marinha Grande Caminar', dist:5.05, cal:265, time:'1h 08m', hr:98, hrMax:118, bb:10 },
+  { date:'2026-06-20', type:'walk', title:'La Coruña Caminar', dist:5.38, cal:294, time:'58m', hr:126, hrMax:169, bb:13 },
+  { date:'2026-06-17', type:'walk', title:'La Coruña Caminar', dist:3.87, cal:229, time:'45m', hr:135, hrMax:165, bb:6 },
+  { date:'2026-06-16', type:'walk', title:'La Coruña Caminar', dist:4.12, cal:237, time:'50m', hr:114, hrMax:152, bb:6 },
+  { date:'2026-06-15', type:'walk', title:'La Coruña Caminar', dist:4.48, cal:265, time:'55m', hr:134, hrMax:179, bb:10 },
+  { date:'2026-06-14', type:'walk', title:'La Coruña Caminar', dist:3.76, cal:213, time:'45m', hr:121, hrMax:156, bb:9 },
+  { date:'2026-06-13', type:'walk', title:'La Coruña Caminar', dist:6.72, cal:376, time:'1h 33m', hr:119, hrMax:158, bb:12 },
+  { date:'2026-06-12', type:'walk', title:'La Coruña Caminar', dist:2.86, cal:161, time:'39m', hr:130, hrMax:159, bb:3 },
+  { date:'2026-06-11', type:'walk', title:'La Coruña Caminar', dist:7.10, cal:426, time:'1h 35m', hr:130, hrMax:175, bb:13 },
+  { date:'2026-06-10', type:'walk', title:'La Coruña Caminar', dist:6.30, cal:359, time:'1h 14m', hr:128, hrMax:167, bb:16 },
+  { date:'2026-06-08', type:'strength', title:'Fuerza', dist:0, cal:58, time:'18m', hr:111, hrMax:132, bb:1 },
+  { date:'2026-06-07', type:'walk', title:'La Coruña Caminar', dist:1.61, cal:105, time:'28m', hr:111, hrMax:148, bb:3 },
+  { date:'2026-06-06', type:'walk', title:'La Coruña Caminar', dist:2.66, cal:152, time:'32m', hr:131, hrMax:160, bb:5 },
+];
+
+const FC_REPOSO = [
+  {d:'Jun 25',v:48},{d:'Jul 25',v:48},{d:'Ago 25',v:46},{d:'Sep 25',v:51},
+  {d:'Oct 25',v:50},{d:'Nov 25',v:50},{d:'Dic 25',v:51},{d:'Ene 26',v:54},
+  {d:'Feb 26',v:52},{d:'Mar 26',v:50},{d:'Abr 26',v:51},{d:'May 26',v:52},{d:'Jun 26',v:53},
+];
+
+const PASOS_SEMANAL = [
+  {d:'23 Jun',v:85019},{d:'30 Jun',v:86178},{d:'7 Jul',v:82155},{d:'14 Jul',v:87827},
+  {d:'21 Jul',v:95449},{d:'28 Jul',v:69272},{d:'4 Ago',v:74772},{d:'11 Ago',v:85622},
+  {d:'18 Ago',v:93618},{d:'25 Ago',v:69253},{d:'1 Sep',v:68635},{d:'8 Sep',v:118000},
+  {d:'15 Sep',v:65265},{d:'22 Sep',v:72640},{d:'29 Sep',v:76069},{d:'6 Oct',v:65383},
+  {d:'13 Oct',v:67896},{d:'20 Oct',v:61827},{d:'27 Oct',v:68395},{d:'3 Nov',v:58050},
+  {d:'10 Nov',v:74760},{d:'17 Nov',v:57135},{d:'24 Nov',v:69843},{d:'1 Dic',v:64981},
+  {d:'8 Dic',v:55357},{d:'15 Dic',v:57437},{d:'22 Dic',v:79262},{d:'29 Dic',v:54864},
+  {d:'5 Ene',v:49795},{d:'12 Ene',v:65312},{d:'19 Ene',v:73362},{d:'26 Ene',v:42295},
+  {d:'2 Feb',v:29182},{d:'9 Feb',v:72031},{d:'16 Feb',v:67309},{d:'23 Feb',v:70749},
+  {d:'2 Mar',v:70704},{d:'9 Mar',v:64854},{d:'16 Mar',v:50627},{d:'23 Mar',v:74085},
+  {d:'30 Mar',v:62179},{d:'6 Abr',v:97099},{d:'13 Abr',v:76843},{d:'20 Abr',v:78395},
+  {d:'27 Abr',v:66031},{d:'4 May',v:69214},{d:'11 May',v:68457},{d:'18 May',v:88180},
+  {d:'25 May',v:73518},{d:'1 Jun',v:72630},{d:'8 Jun',v:96452},{d:'15 Jun',v:88517},
+];
+
+const SUENO_SEMANAL = [
+  {w:'23-29 Jun',dur:362},{w:'30 Jun-6 Jul',dur:454},{w:'7-13 Jul',dur:398},{w:'14-20 Jul',dur:490},
+  {w:'21-27 Jul',dur:395},{w:'28 Jul-3 Ago',dur:427},{w:'4-10 Ago',dur:399},{w:'11-17 Ago',dur:431},
+  {w:'18-24 Ago',dur:419},{w:'25-31 Ago',dur:428},{w:'1-7 Sep',dur:437},{w:'8-14 Sep',dur:423},
+  {w:'15-21 Sep',dur:460},{w:'22-28 Sep',dur:469},{w:'29 Sep-5 Oct',dur:423},{w:'6-12 Oct',dur:444},
+  {w:'13-19 Oct',dur:450},{w:'20-26 Oct',dur:467},{w:'27 Oct-2 Nov',dur:444},{w:'3-9 Nov',dur:465},
+  {w:'10-16 Nov',dur:455},{w:'17-23 Nov',dur:460},{w:'24-30 Nov',dur:427},{w:'1-7 Dic',dur:443},
+  {w:'8-14 Dic',dur:480},{w:'15-21 Dic',dur:476},{w:'22-28 Dic',dur:473},{w:'29 Dic-4 Ene',dur:444},
+  {w:'5-11 Ene',dur:457},{w:'12-18 Ene',dur:424},{w:'19-25 Ene',dur:444},{w:'26 Ene-1 Feb',dur:469},
+  {w:'2-8 Feb',dur:0},{w:'9-15 Feb',dur:0},{w:'16-22 Feb',dur:465},{w:'23 Feb-1 Mar',dur:447},
+  {w:'2-8 Mar',dur:458},{w:'9-15 Mar',dur:460},{w:'16-22 Mar',dur:456},{w:'23-29 Mar',dur:419},
+  {w:'30 Mar-5 Abr',dur:417},{w:'6-12 Abr',dur:401},{w:'13-19 Abr',dur:402},{w:'20-26 Abr',dur:416},
+  {w:'27 Abr-3 May',dur:407},{w:'4-10 May',dur:377},{w:'11-17 May',dur:457},{w:'18-24 May',dur:438},
+  {w:'25-31 May',dur:437},{w:'1-7 Jun',dur:430},{w:'8-14 Jun',dur:430},{w:'15-21 Jun',dur:411},
+];
+
+// FC durante sueño (simulada para la noche del 20-21 jun, min 50, max 77)
+const HR_SLEEP_TONIGHT = [58,55,52,51,50,51,53,56,60,63,70,77,65,58,54,52,51,52,54,57,60,62,58,54,52,51,50,52,55,58];
+
+const SUPPS = {
+  ayunas: [
+    { id:'creatina', name:'Creapure (creatina)', dose:'5 g' },
+    { id:'vitc', name:'Vitamina C', dose:'1 g' },
+    { id:'ala', name:'Na-R-ALA (HSN)', dose:'300 mg' },
+    { id:'colageno', name:'Colágeno bovino (HSN)', dose:'10 g' },
+  ],
+  comida: [
+    { id:'omega3', name:'Omega-3 TG IFOS', dose:'3–4 perlas' },
+    { id:'d3k2', name:'D3 5000 UI + K2 200 µg', dose:'1 cápsula' },
+    { id:'multi', name:'Multivitamínico', dose:'dosis estándar' },
+    { id:'coq10', name:'CoQ10 200 mg + BioPerine', dose:'1 cápsula' },
+    { id:'probio', name:'GI Biotics 100B (HSN)', dose:'1 cápsula' },
+    { id:'nac', name:'NAC 300 mg (HSN)', dose:'2 cápsulas (600 mg)' },
+    { id:'carni', name:'L-Carnitina Carnipure', dose:'3 cápsulas' },
+  ],
+  noche: [
+    { id:'mg', name:'Mg bisglicinato + B6', dose:'1 toma' },
+    { id:'ashwa', name:'KSM-66 Ashwagandha', dose:'dosis estándar' },
+    { id:'ps', name:'Fosfatidilserina 300 mg', dose:'2 cápsulas' },
+  ],
+  dia: [
+    { id:'losalt', name:'LoSalt (KCl)', dose:'en infusiones, s/n' },
+  ]
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
 let currentDate = new Date();
 let currentPeriod = 7;
-let toggles = { gluten: false, lacteos: false, azucar: false, dieta: true };
+let dietOK = true;
+let missedSupps = new Set();
 let charts = {};
 
 function dateKey(d) { return d.toISOString().split('T')[0]; }
-function loadData() { try { return JSON.parse(localStorage.getItem('johnHealth') || '{}'); } catch(e) { return {}; } }
-function saveData(data) { localStorage.setItem('johnHealth', JSON.stringify(data)); }
+function loadData() { try { return JSON.parse(localStorage.getItem('johnHealthV2') || '{}'); } catch(e) { return {}; } }
+function saveData(d) { localStorage.setItem('johnHealthV2', JSON.stringify(d)); }
 
 function formatDateLabel(d) {
-  const today = new Date();
-  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  const today = new Date(), yesterday = new Date(today);
+  yesterday.setDate(today.getDate()-1);
   if (dateKey(d) === dateKey(today)) return 'Hoy · ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
   if (dateKey(d) === dateKey(yesterday)) return 'Ayer · ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
   return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
 }
+function changeDay(delta) { currentDate.setDate(currentDate.getDate()+delta); loadDay(); document.getElementById('dateLabel').textContent = formatDateLabel(currentDate); }
+document.getElementById('dateLabel').textContent = formatDateLabel(currentDate);
 
-function changeDay(delta) {
-  currentDate = new Date(currentDate);
-  currentDate.setDate(currentDate.getDate() + delta);
-  loadDay(); updateDateLabel();
+function toggleDiet() {
+  dietOK = !dietOK;
+  const el = document.getElementById('dietToggle');
+  el.className = 'diet-toggle ' + (dietOK ? 'ok' : 'skip');
+  document.getElementById('dietLabel').textContent = dietOK ? '🥩 Dieta carnívora' : '🍕 Dieta saltada';
+  document.getElementById('dietSub').textContent = dietOK ? 'Toca para marcar que te la has saltado' : 'Toca si has vuelto a la carnívora';
+  document.getElementById('dietPill').textContent = dietOK ? 'OK' : 'Saltada';
 }
 
-function updateDateLabel() { document.getElementById('dateLabel').textContent = formatDateLabel(currentDate); }
+function renderSupps() {
+  ['ayunas','comida','noche','dia'].forEach(section => {
+    const el = document.getElementById('supp-'+section);
+    if (!el) return;
+    el.innerHTML = SUPPS[section].map(s => `
+      <div class="supp-item ${missedSupps.has(s.id)?'missed':''}" onclick="toggleSupp('${s.id}')">
+        <div class="supp-item-info">
+          <div class="supp-name">${s.name}</div>
+          <div class="supp-dose">${s.dose}</div>
+        </div>
+        <div class="supp-check">${missedSupps.has(s.id)?'✕':''}</div>
+      </div>`).join('');
+  });
+}
+function toggleSupp(id) { missedSupps.has(id) ? missedSupps.delete(id) : missedSupps.add(id); renderSupps(); }
+renderSupps();
 
-function calcFast() {
-  const lm = document.getElementById('lastMeal').value;
-  const fm = document.getElementById('firstMeal').value;
-  if (!lm || !fm) { document.getElementById('fastHours').textContent = '— h'; return; }
-  const [lh,lmin] = lm.split(':').map(Number);
-  const [fh,fmin] = fm.split(':').map(Number);
-  let diff = (fh*60+fmin)-(lh*60+lmin);
-  if (diff <= 0) diff += 1440;
-  const h = Math.floor(diff/60), m = diff%60;
-  document.getElementById('fastHours').textContent = h + (m > 0 ? ':' + String(m).padStart(2,'0') : '') + ' h';
+function actIcon(type) { return type==='strength'?'💪':'🚶'; }
+
+function renderTodayActivities() {
+  const todayKey = dateKey(new Date());
+  const acts = GARMIN_ACTIVITIES.filter(a => a.date === todayKey);
+  const el = document.getElementById('todayActivities');
+  if (!el) return;
+  if (!acts.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">Sin actividades registradas hoy</div>'; return; }
+  el.innerHTML = acts.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon">${actIcon(a.type)}</div>
+      <div class="activity-info">
+        <div class="activity-name">${a.title}</div>
+        <div class="activity-meta">${a.time} · FC ${a.hr}–${a.hrMax} ppm</div>
+      </div>
+      <div class="activity-stat">
+        <div class="activity-dist">${a.dist>0?a.dist.toFixed(2)+' km':'—'}</div>
+        <div class="activity-cal">${a.cal} kcal</div>
+      </div>
+    </div>`).join('');
+}
+renderTodayActivities();
+
+function renderRecentActivities() {
+  const el = document.getElementById('recentActivities');
+  if (!el) return;
+  el.innerHTML = GARMIN_ACTIVITIES.slice(0,10).map(a => {
+    const d = new Date(a.date+'T12:00:00');
+    const label = d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    return `<div class="activity-item">
+      <div class="activity-icon">${actIcon(a.type)}</div>
+      <div class="activity-info">
+        <div class="activity-name">${a.title}</div>
+        <div class="activity-meta">${label} · ${a.time} · FC ${a.hr} ppm</div>
+      </div>
+      <div class="activity-stat">
+        <div class="activity-dist">${a.dist>0?a.dist.toFixed(2)+' km':'Fuerza'}</div>
+        <div class="activity-cal">${a.cal} kcal</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-document.getElementById('lastMeal').addEventListener('change', calcFast);
-document.getElementById('firstMeal').addEventListener('change', calcFast);
-
-function applyToggleStyle(key, val) {
-  const el = document.getElementById('tog-'+key);
-  el.classList.remove('on-bad','on-good');
-  if (key === 'dieta') { if (val) el.classList.add('on-good'); }
-  else { if (val) el.classList.add('on-bad'); }
-  const dot = el.querySelector('.toggle-dot');
-  dot.style.background = '';
-}
-
-function toggleItem(key) {
-  toggles[key] = !toggles[key];
-  applyToggleStyle(key, toggles[key]);
-}
-
-function loadDay() {
+function renderCarnivoreCalendar() {
+  const el = document.getElementById('carnivoreCal');
+  if (!el) return;
   const data = loadData();
-  const key = dateKey(currentDate);
-  const day = data[key] || {};
-  document.getElementById('peso').value = day.peso || '';
-  document.getElementById('pasos').value = day.pasos || '';
-  document.getElementById('km').value = day.km || '';
-  document.getElementById('lastMeal').value = day.lastMeal || '19:00';
-  document.getElementById('firstMeal').value = day.firstMeal || '19:00';
-  document.getElementById('notas').value = day.notas || '';
-  toggles = { gluten: day.gluten||false, lacteos: day.lacteos||false, azucar: day.azucar||false, dieta: day.dieta !== undefined ? day.dieta : true };
-  ['gluten','lacteos','azucar','dieta'].forEach(k => applyToggleStyle(k, toggles[k]));
-  calcFast();
+  let html = '';
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = dateKey(d), day = data[k];
+    const n = d.getDate();
+    if (!day) html += `<div class="cal-day empty">${n}</div>`;
+    else if (day.dietOK === false) html += `<div class="cal-day skip">${n}</div>`;
+    else html += `<div class="cal-day ok">${n}</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderSuppCompliance() {
+  const el = document.getElementById('suppCompliance');
+  if (!el) return;
+  const data = loadData();
+  const allSupps = [...SUPPS.ayunas,...SUPPS.comida,...SUPPS.noche,...SUPPS.dia];
+  const keys = Object.keys(data).sort().slice(-30);
+  el.innerHTML = allSupps.map(s => {
+    let taken = 0;
+    keys.forEach(k => { if (!data[k].missedSupps||!data[k].missedSupps.includes(s.id)) taken++; });
+    const pct = keys.length ? Math.round((taken/keys.length)*100) : 100;
+    return `<div class="compliance-row">
+      <div class="compliance-name">${s.name}</div>
+      <div class="compliance-bar-wrap"><div class="compliance-bar" style="width:${pct}%"></div></div>
+      <div class="compliance-pct">${pct}%</div>
+    </div>`;
+  }).join('');
 }
 
 function saveDay() {
   const data = loadData();
   const key = dateKey(currentDate);
-  const lm = document.getElementById('lastMeal').value;
-  const fm = document.getElementById('firstMeal').value;
-  let fastH = null;
-  if (lm && fm) {
-    const [lh,lmin] = lm.split(':').map(Number);
-    const [fh,fmin] = fm.split(':').map(Number);
-    let diff = (fh*60+fmin)-(lh*60+lmin);
-    if (diff <= 0) diff += 1440;
-    fastH = parseFloat((diff/60).toFixed(1));
-  }
   data[key] = {
     peso: parseFloat(document.getElementById('peso').value)||null,
-    pasos: parseInt(document.getElementById('pasos').value)||null,
-    km: parseFloat(document.getElementById('km').value)||null,
-    lastMeal: lm, firstMeal: fm, fastH,
-    gluten: toggles.gluten, lacteos: toggles.lacteos, azucar: toggles.azucar, dieta: toggles.dieta,
+    dietOK,
+    missedSupps: [...missedSupps],
     notas: document.getElementById('notas').value
   };
   saveData(data);
@@ -333,125 +713,157 @@ function saveDay() {
   setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-function getPeriodDates(n) {
-  const dates = [];
-  for (let i = n-1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate()-i); dates.push(dateKey(d)); }
-  return dates;
+function loadDay() {
+  const data = loadData(), key = dateKey(currentDate), day = data[key]||{};
+  document.getElementById('peso').value = day.peso||'';
+  document.getElementById('notas').value = day.notas||'';
+  dietOK = day.dietOK !== undefined ? day.dietOK : true;
+  const el = document.getElementById('dietToggle');
+  el.className = 'diet-toggle ' + (dietOK?'ok':'skip');
+  document.getElementById('dietLabel').textContent = dietOK?'🥩 Dieta carnívora':'🍕 Dieta saltada';
+  document.getElementById('dietSub').textContent = dietOK?'Toca para marcar que te la has saltado':'Toca si has vuelto a la carnívora';
+  document.getElementById('dietPill').textContent = dietOK?'OK':'Saltada';
+  missedSupps = new Set(day.missedSupps||[]);
+  renderSupps();
+}
+loadDay();
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+
+const textCol = 'rgba(255,255,255,0.3)';
+const gridCol = 'rgba(255,255,255,0.05)';
+
+function baseOpts(overrides) {
+  return Object.assign({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#222', titleColor:'#f0f0f0', bodyColor:'#888', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, padding:10, cornerRadius:8 } },
+    scales:{
+      x:{ ticks:{color:textCol,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}, grid:{color:gridCol}, border:{display:false} },
+      y:{ ticks:{color:textCol,font:{size:10}}, grid:{color:gridCol}, border:{display:false} }
+    }
+  }, overrides||{});
+}
+function dc(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function initGarminCharts() {
+  dc('chartFC');
+  charts['chartFC'] = new Chart(document.getElementById('chartFC'), {
+    type:'line',
+    data:{ labels:FC_REPOSO.map(x=>x.d), datasets:[{ data:FC_REPOSO.map(x=>x.v), borderColor:'#c8f53e', backgroundColor:'rgba(200,245,62,0.07)', pointRadius:3, pointBackgroundColor:'#c8f53e', tension:0.4, fill:true }]},
+    options: baseOpts({ scales:{ x:{...baseOpts().scales.x}, y:{...baseOpts().scales.y, suggestedMin:43, suggestedMax:58} } })
+  });
+
+  dc('chartPasos');
+  const p = PASOS_SEMANAL.slice(-20);
+  charts['chartPasos'] = new Chart(document.getElementById('chartPasos'), {
+    type:'bar',
+    data:{ labels:p.map(x=>x.d), datasets:[{ data:p.map(x=>x.v), backgroundColor:p.map(x=>x.v>80000?'rgba(200,245,62,0.6)':'rgba(90,171,255,0.45)'), borderRadius:4, borderSkipped:false }]},
+    options: baseOpts()
+  });
+
+  renderRecentActivities();
 }
 
-function movingAvg(arr, w) {
-  return arr.map((v,i) => {
-    const slice = arr.slice(Math.max(0,i-w+1),i+1).filter(x=>x!==null);
-    return slice.length ? parseFloat((slice.reduce((a,b)=>a+b,0)/slice.length).toFixed(1)) : null;
+function initSuenoCharts() {
+  dc('chartSueno');
+  const sl = SUENO_SEMANAL.slice(-16);
+  charts['chartSueno'] = new Chart(document.getElementById('chartSueno'), {
+    type:'bar',
+    data:{ labels:sl.map(x=>x.w.split('-')[0].trim().split(' ').slice(0,2).join(' ')),
+      datasets:[{ data:sl.map(x=>x.dur||null), backgroundColor:sl.map(x=>x.dur>=420?'rgba(200,245,62,0.55)':x.dur>0?'rgba(90,171,255,0.45)':'rgba(255,90,90,0.3)'), borderRadius:4, borderSkipped:false }]},
+    options: baseOpts({ scales:{ x:{...baseOpts().scales.x}, y:{...baseOpts().scales.y, ticks:{...baseOpts().scales.y.ticks, callback:v=>v?Math.floor(v/60)+'h':''}, suggestedMin:300, suggestedMax:520} } })
+  });
+
+  dc('chartHRSleep');
+  charts['chartHRSleep'] = new Chart(document.getElementById('chartHRSleep'), {
+    type:'line',
+    data:{ labels:HR_SLEEP_TONIGHT.map((_,i)=>''),
+      datasets:[{ data:HR_SLEEP_TONIGHT, borderColor:'#ff5a5a', backgroundColor:'rgba(255,90,90,0.07)', pointRadius:0, tension:0.5, fill:true }]},
+    options: baseOpts({ scales:{ x:{display:false}, y:{...baseOpts().scales.y, suggestedMin:45, suggestedMax:80} } })
   });
 }
 
+// ─── STATS ───────────────────────────────────────────────────────────────────
+
 function setPeriod(n, btn) {
   currentPeriod = n;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderStats();
 }
 
-function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function movingAvg(arr, w) {
+  return arr.map((v,i) => { const s=arr.slice(Math.max(0,i-w+1),i+1).filter(x=>x!==null); return s.length?parseFloat((s.reduce((a,b)=>a+b,0)/s.length).toFixed(1)):null; });
+}
 
 function renderStats() {
   const data = loadData();
-  const dates = getPeriodDates(currentPeriod);
-  const labels = dates.map(d => new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
-  const pesoArr = dates.map(d => data[d]?.peso||null);
-  const pasosArr = dates.map(d => data[d]?.pasos||null);
-  const kmArr = dates.map(d => data[d]?.km||null);
-  const ayunoArr = dates.map(d => data[d]?.fastH||null);
-  const avg = arr => { const v=arr.filter(x=>x!==null); return v.length ? parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)) : null; };
-  const pesoMA7 = movingAvg(pesoArr,7);
-  const pesoMA30 = movingAvg(pesoArr,30);
-  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const textCol = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
-  const gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+  const dates = [];
+  for (let i=currentPeriod-1;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); dates.push(dateKey(d)); }
+  const labels = dates.map(d=>new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
+  const pesoArr = dates.map(d=>data[d]?.peso||null);
+  const avg = arr => { const v=arr.filter(x=>x!==null); return v.length?parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)):null; };
 
   document.getElementById('statsCards').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Peso medio</div><div class="stat-val">${avg(pesoArr)||'—'} <span>kg</span></div><div class="stat-sub">últimos ${currentPeriod}d</div></div>
-    <div class="stat-card"><div class="stat-label">Pasos medios</div><div class="stat-val">${avg(pasosArr)?.toLocaleString('es-ES')||'—'}</div><div class="stat-sub">últimos ${currentPeriod}d</div></div>
-    <div class="stat-card"><div class="stat-label">Ayuno medio</div><div class="stat-val">${avg(ayunoArr)||'—'} <span>h</span></div><div class="stat-sub">últimos ${currentPeriod}d</div></div>
-    <div class="stat-card"><div class="stat-label">Km medios</div><div class="stat-val">${avg(kmArr)||'—'} <span>km</span></div><div class="stat-sub">últimos ${currentPeriod}d</div></div>`;
+    <div class="stat-card"><div class="stat-label">Peso medio</div><div class="stat-val">${avg(pesoArr)||'—'} <span>kg</span></div><div class="stat-trend">últimos ${currentPeriod}d</div></div>
+    <div class="stat-card"><div class="stat-label">FC reposo</div><div class="stat-val">53 <span>ppm</span></div><div class="stat-trend warn">+7 vs mínimo</div></div>
+    <div class="stat-card"><div class="stat-label">Sueño (sem)</div><div class="stat-val">6h <span>51m</span></div><div class="stat-trend">-17m vs mes</div></div>
+    <div class="stat-card"><div class="stat-label">Pasos (sem)</div><div class="stat-val">88.5 <span>k</span></div><div class="stat-trend good">↑ vs anterior</div></div>`;
 
-  const baseOpts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{backgroundColor:isDark?'#2a2a2a':'#fff',titleColor:isDark?'#f0f0f0':'#1a1a1a',bodyColor:isDark?'#aaa':'#555',borderColor:isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.08)',borderWidth:1,padding:10,cornerRadius:8} }, scales:{ x:{ticks:{color:textCol,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:7},grid:{color:gridCol},border:{display:false}}, y:{ticks:{color:textCol,font:{size:10}},grid:{color:gridCol},border:{display:false}} } };
-
-  destroyChart('chartPeso');
-  charts['chartPeso'] = new Chart(document.getElementById('chartPeso'), { type:'line', data:{ labels, datasets:[ {label:'Peso',data:pesoArr,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',pointRadius:3,pointBackgroundColor:'#378ADD',tension:0.35,spanGaps:true,fill:true}, {label:'Media 7d',data:pesoMA7,borderColor:'#E24B4A',borderDash:[5,3],pointRadius:0,tension:0.4,spanGaps:true,borderWidth:1.5}, {label:'Media 30d',data:pesoMA30,borderColor:'#1D9E75',borderDash:[2,4],pointRadius:0,tension:0.4,spanGaps:true,borderWidth:1.5} ]}, options:{...baseOpts} });
-
-  destroyChart('chartPasos');
-  charts['chartPasos'] = new Chart(document.getElementById('chartPasos'), { type:'bar', data:{ labels, datasets:[{label:'Pasos',data:pasosArr,backgroundColor:'rgba(55,138,221,0.55)',borderRadius:4,borderSkipped:false}]}, options:{...baseOpts} });
-
-  destroyChart('chartKm');
-  charts['chartKm'] = new Chart(document.getElementById('chartKm'), { type:'bar', data:{ labels, datasets:[{label:'Km',data:kmArr,backgroundColor:'rgba(186,117,23,0.55)',borderRadius:4,borderSkipped:false}]}, options:{...baseOpts} });
-
-  destroyChart('chartAyuno');
-  charts['chartAyuno'] = new Chart(document.getElementById('chartAyuno'), { type:'bar', data:{ labels, datasets:[{label:'Ayuno (h)',data:ayunoArr,backgroundColor:'rgba(29,158,117,0.55)',borderRadius:4,borderSkipped:false}]}, options:{...baseOpts} });
-}
-
-function renderRachas() {
-  const data = loadData();
-  const keys = Object.keys(data).sort();
-  let gS=0,lS=0,aS=0,dS=0;
-  let g30=0,l30=0,a30=0,d30=0,total30=0;
-  const today = dateKey(new Date());
-  const d30start = dateKey(new Date(Date.now()-29*864e5));
-  for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].gluten) gS++; else break; }
-  for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].lacteos) lS++; else break; }
-  for (let i=keys.length-1;i>=0;i--) { if (!data[keys[i]].azucar) aS++; else break; }
-  for (let i=keys.length-1;i>=0;i--) { if (data[keys[i]].dieta) dS++; else break; }
-
-  let maxPasos=null, maxPasosDate=null, maxKm=null, maxKmDate=null;
-  keys.forEach(k => {
-    if (k>=d30start&&k<=today) {
-      total30++;
-      const d=data[k];
-      if(d.gluten)g30++; if(d.lacteos)l30++; if(d.azucar)a30++; if(d.dieta)d30++;
-    }
-    const d=data[k];
-    if(d.pasos && (maxPasos===null || d.pasos>maxPasos)) { maxPasos=d.pasos; maxPasosDate=k; }
-    if(d.km && (maxKm===null || d.km>maxKm)) { maxKm=d.km; maxKmDate=k; }
+  dc('chartPeso');
+  charts['chartPeso'] = new Chart(document.getElementById('chartPeso'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { data:pesoArr, borderColor:'#5aabff', backgroundColor:'rgba(90,171,255,0.07)', pointRadius:3, tension:0.35, fill:true, spanGaps:true },
+      { data:movingAvg(pesoArr,7), borderColor:'#c8f53e', borderDash:[5,3], pointRadius:0, tension:0.4, spanGaps:true, borderWidth:1.5 },
+    ]},
+    options: baseOpts()
   });
 
-  const pct = n => total30>0 ? Math.round((n/total30)*100) : 0;
-  const fmtDate = k => k ? new Date(k+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}) : '—';
-
-  document.getElementById('rachasCard').innerHTML = `<div class="card-title">Rachas activas</div>
-    <div class="streak-row"><span class="streak-name">Sin gluten</span><span class="streak-val ${gS>6?'good':''}">${gS} días</span></div>
-    <div class="streak-row"><span class="streak-name">Sin lácteos</span><span class="streak-val ${lS>6?'good':''}">${lS} días</span></div>
-    <div class="streak-row"><span class="streak-name">Sin azúcar</span><span class="streak-val ${aS>6?'good':''}">${aS} días</span></div>
-    <div class="streak-row"><span class="streak-name">Dieta respetada</span><span class="streak-val ${dS>6?'good':''}">${dS} días consecutivos</span></div>`;
-
-  document.getElementById('recordsCard').innerHTML = `<div class="card-title">Récords personales</div>
-    <div class="streak-row">
-      <div><span class="streak-name">Más pasos en un día</span><div style="font-size:12px;color:#999;margin-top:2px">${fmtDate(maxPasosDate)}</div></div>
-      <span class="streak-val good">${maxPasos ? maxPasos.toLocaleString('es-ES') : '—'}</span>
-    </div>
-    <div class="streak-row">
-      <div><span class="streak-name">Más km en un día</span><div style="font-size:12px;color:#999;margin-top:2px">${fmtDate(maxKmDate)}</div></div>
-      <span class="streak-val good">${maxKm ? maxKm.toFixed(1) + ' km' : '—'}</span>
-    </div>`;
-
-  document.getElementById('dietaResumen').innerHTML = `<div class="card-title">Resumen dieta (últimos 30 días)</div>
-    <div class="streak-row"><span class="streak-name">Días con gluten</span><span class="streak-val">${g30} / ${total30} · ${pct(g30)}%</span></div>
-    <div class="streak-row"><span class="streak-name">Días con lácteos</span><span class="streak-val">${l30} / ${total30} · ${pct(l30)}%</span></div>
-    <div class="streak-row"><span class="streak-name">Días con azúcar</span><span class="streak-val">${a30} / ${total30} · ${pct(a30)}%</span></div>
-    <div class="streak-row"><span class="streak-name">Dieta OK</span><span class="streak-val good">${d30} / ${total30} · ${pct(d30)}%</span></div>`;
+  renderCarnivoreCalendar();
+  renderSuppCompliance();
 }
 
+// ─── LOGROS ──────────────────────────────────────────────────────────────────
+
+function renderLogros() {
+  const data = loadData(), keys = Object.keys(data).sort();
+  let carniStreak = 0;
+  for (let i=keys.length-1;i>=0;i--) { if(data[keys[i]].dietOK!==false) carniStreak++; else break; }
+
+  document.getElementById('rachasCard').innerHTML = `
+    <div class="card-title">Rachas activas</div>
+    <div class="streak-row"><span class="streak-name">Dieta carnívora</span><span class="streak-val ${carniStreak>6?'good':''}">${carniStreak} días</span></div>
+    <div class="streak-row"><span class="streak-name">Pasos sem. > 70k</span><span class="streak-val good">2 semanas</span></div>
+    <div class="streak-row"><span class="streak-name">Sueño > 7h</span><span class="streak-val warn">en pausa</span></div>`;
+
+  document.getElementById('recordsCard').innerHTML = `
+    <div class="card-title">Récords</div>
+    <div class="streak-row">
+      <div><div class="streak-name">Semana más activa</div><div class="streak-meta">8 sep 2025</div></div>
+      <span class="streak-val good">118.000 pasos</span>
+    </div>
+    <div class="streak-row"><span class="streak-name">FC reposo mínima</span><span class="streak-val good">46 ppm</span></div>
+    <div class="streak-row"><span class="streak-name">Mejor puntuación sueño</span><span class="streak-val good">78 pts</span></div>`;
+
+  document.getElementById('dietaResumen').innerHTML = `
+    <div class="card-title">Dieta carnívora</div>
+    <div class="streak-row"><span class="streak-name">Días registrados</span><span class="streak-val">${keys.length}</span></div>
+    <div class="streak-row"><span class="streak-name">Esta semana</span><span class="streak-val warn">Vacaciones 🏖</span></div>`;
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+
 function showTab(tab, btn) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   btn.classList.add('active');
   if (tab==='stats') renderStats();
-  if (tab==='rachas') renderRachas();
+  if (tab==='garmin') initGarminCharts();
+  if (tab==='sueno') initSuenoCharts();
+  if (tab==='logros') renderLogros();
 }
-
-updateDateLabel();
-loadDay();
 </script>
 </body>
 </html>
