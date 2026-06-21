@@ -444,52 +444,24 @@ function toast(msg='✓ Guardado'){ const t=document.getElementById('toast'); t.
 
 // ════════════════════════════════════════════
 // PROXY IFRAME para llamadas a la API (sin CORS)
-// El iframe se carga con srcdoc y tiene acceso a fetch sin restricciones CORS
-// porque está en el mismo origen que la app
 // ════════════════════════════════════════════
-let iframeReady = null;
-
-function setupProxy() {
-  const iframe = document.getElementById('apiProxy');
-  iframeReady = new Promise(resolve => {
-    iframe.addEventListener('load', resolve, {once: true});
-  });
-  const iframeDoc = `<!DOCTYPE html><html><body><script>
-window.addEventListener('message', async function(e) {
-  if(e.data.type !== 'API_CALL') return;
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
-      body: JSON.stringify(e.data.payload)
-    });
-    const data = await r.json();
-    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:r.ok, status:r.status, data}, '*');
-  } catch(err) {
-    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:false, error:err.message}, '*');
-  }
-});
-<\/script></body></html>`;
-  iframe.srcdoc = iframeDoc;
-
-  window.addEventListener('message', function(e) {
-    if(e.data.type !== 'API_RESULT') return;
-    const cb = apiCallbacks[e.data.id];
-    if(cb){ delete apiCallbacks[e.data.id]; cb(e.data); }
-  });
-}
+// API CALL — fetch directo con header oficial
+// ════════════════════════════════════════════
+function setupProxy() {} // no-op
 
 async function callAPI(payload) {
-  await iframeReady;
-  return new Promise((resolve, reject) => {
-    const id = ++apiCallId;
-    apiCallbacks[id] = (result) => {
-      if(result.ok) resolve(result.data);
-      else reject(new Error(result.data?.error?.message || result.error || `HTTP ${result.status}`));
-    };
-    document.getElementById('apiProxy').contentWindow.postMessage({ type:'API_CALL', id, payload }, '*');
-    setTimeout(() => { if(apiCallbacks[id]){ delete apiCallbacks[id]; reject(new Error('Timeout (30s)')); } }, 30000);
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-calls': 'true'
+    },
+    body: JSON.stringify(payload)
   });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data?.error?.message || 'HTTP ' + r.status);
+  return data;
 }
 
 // ════════════════════════════════════════════
