@@ -317,7 +317,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="toast" id="toast">✓ Guardado</div>
 
 <!-- iframe oculto para llamadas API (evita CORS) -->
-<iframe id="apiProxy" sandbox="allow-scripts allow-same-origin"></iframe>
+<iframe id="apiProxy" sandbox="allow-scripts"></iframe>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -447,8 +447,13 @@ function toast(msg='✓ Guardado'){ const t=document.getElementById('toast'); t.
 // El iframe se carga con srcdoc y tiene acceso a fetch sin restricciones CORS
 // porque está en el mismo origen que la app
 // ════════════════════════════════════════════
+let iframeReady = null;
+
 function setupProxy() {
   const iframe = document.getElementById('apiProxy');
+  iframeReady = new Promise(resolve => {
+    iframe.addEventListener('load', resolve, {once: true});
+  });
   const iframeDoc = `<!DOCTYPE html><html><body><script>
 window.addEventListener('message', async function(e) {
   if(e.data.type !== 'API_CALL') return;
@@ -459,9 +464,9 @@ window.addEventListener('message', async function(e) {
       body: JSON.stringify(e.data.payload)
     });
     const data = await r.json();
-    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:r.ok, status:r.status, data}, e.origin);
+    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:r.ok, status:r.status, data}, '*');
   } catch(err) {
-    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:false, error:err.message}, e.origin);
+    e.source.postMessage({type:'API_RESULT', id:e.data.id, ok:false, error:err.message}, '*');
   }
 });
 <\/script></body></html>`;
@@ -474,7 +479,8 @@ window.addEventListener('message', async function(e) {
   });
 }
 
-function callAPI(payload) {
+async function callAPI(payload) {
+  await iframeReady;
   return new Promise((resolve, reject) => {
     const id = ++apiCallId;
     apiCallbacks[id] = (result) => {
