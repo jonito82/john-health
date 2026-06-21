@@ -545,8 +545,7 @@ function renderResumenSemana(){
   document.getElementById('resumenGrid').innerHTML =
     stat('Último peso', ultimoPeso, 'kg', mediaPeso ? `media ${mediaPeso.toFixed(1)} kg` : '') +
     stat('Pasos semana', totalPasos ? totalPasos.toLocaleString('es-ES') : null, 'pasos', pasos.length ? `${pasos.length} días con actividad` : '') +
-    stat('Km medios/día', mediaKm ? mediaKm.toFixed(1) : null, 'km', kms.length ? `${kms.length} actividades` : '') +
-    stat('Ayuno medio', mediaAyuno ? mediaAyuno.toFixed(1) : null, 'h', ayunos.length ? `${ayunos.length} registros` : '');
+    stat('Km medios/día', mediaKm ? mediaKm.toFixed(1) : null, 'km', kms.length ? `${kms.length} actividades` : '');
 }
 
 function loadDay(){
