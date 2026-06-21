@@ -234,13 +234,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI'
     </div>
 
     <div class="card">
-      <div class="card-title">Báscula · <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">datos automáticos</span></div>
+      <div class="card-title">Peso del día</div>
       <div class="metric-row">
         <span class="metric-label">Peso</span>
-        <span class="metric-val" id="pesoVal" style="font-size:20px;font-weight:700;color:var(--accent)">—</span>
+        <input class="metric-input" type="number" step="0.1" inputmode="decimal" id="pesoInput" placeholder="—">
         <span class="metric-unit">kg</span>
       </div>
+      <div id="pesoRefRow" style="font-size:11px;color:var(--text3);margin-top:4px;padding-top:8px;border-top:1px solid var(--border)">
+        Último exportado de báscula: <span id="pesoRef" style="color:var(--text2);font-weight:600">—</span> kg
+      </div>
+    </div>
 
+    <div class="card" id="weekSummaryCard">
+      <div class="card-title">Esta semana</div>
+      <div id="weekSummaryContent" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
     </div>
 
     <div class="card">
@@ -761,7 +768,9 @@ function renderSuppCompliance() {
 function saveDay() {
   const data = loadData();
   const key = dateKey(currentDate);
+  const pesoVal = parseFloat(document.getElementById('pesoInput').value);
   data[key] = {
+    peso: isNaN(pesoVal) ? null : pesoVal,
     dietOK,
     missedSupps: [...missedSupps],
     notas: document.getElementById('notas').value
@@ -772,9 +781,88 @@ function saveDay() {
   setTimeout(() => t.classList.remove('show'), 1800);
 }
 
+function renderWeekSummary() {
+  const el = document.getElementById('weekSummaryContent');
+  if (!el) return;
+  const data = loadData();
+  // Esta semana: lunes a hoy
+  const today = new Date();
+  const dow = today.getDay(); // 0=dom
+  const diffToMon = (dow === 0) ? 6 : dow - 1;
+  const weekDays = [];
+  for (let i = diffToMon; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    weekDays.push(dateKey(d));
+  }
+
+  // Peso medio de la semana (manual + báscula)
+  const pesoDataMap = {}; PESO_DATA.forEach(x => { pesoDataMap[x.d] = x.p; });
+  const pesosSem = weekDays.map(d => {
+    if (data[d]?.peso) return data[d].peso;
+    if (pesoDataMap[d]) return pesoDataMap[d];
+    return null;
+  }).filter(x => x !== null);
+  const pesoMedSem = pesosSem.length ? (pesosSem.reduce((a,b)=>a+b,0)/pesosSem.length).toFixed(1) : '—';
+
+  // Pasos: semana en curso de PASOS_SEMANAL (último dato)
+  const lastPasos = PASOS_SEMANAL[PASOS_SEMANAL.length-1];
+  const pasosDisplay = lastPasos ? (lastPasos.v/1000).toFixed(1)+'k' : '—';
+
+  // Actividades esta semana
+  const actsWeek = GARMIN_ACTIVITIES.filter(a => weekDays.includes(a.date));
+  const distSem = actsWeek.reduce((s,a) => s + a.dist, 0).toFixed(1);
+  const calSem = actsWeek.reduce((s,a) => s + a.cal, 0);
+  const numActs = actsWeek.length;
+
+  // Dieta: dias OK esta semana
+  const dietaDias = weekDays.filter(d => data[d] && data[d].dietOK !== false).length;
+  const dietaTotal = weekDays.filter(d => data[d]).length;
+
+  // Suplementos: media adherencia esta semana
+  const allSupps = [...SUPPS.ayunas,...SUPPS.comida,...SUPPS.noche,...SUPPS.dia];
+  let suppTaken = 0, suppTotal = 0;
+  weekDays.forEach(d => {
+    if (data[d]) {
+      allSupps.forEach(s => {
+        suppTotal++;
+        if (!data[d].missedSupps || !data[d].missedSupps.includes(s.id)) suppTaken++;
+      });
+    }
+  });
+  const suppPct = suppTotal > 0 ? Math.round((suppTaken/suppTotal)*100) : '—';
+
+  el.innerHTML = `
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px">Peso medio</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px">${pesoMedSem} <span style="font-size:12px;font-weight:400;color:var(--text3)">kg</span></div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px">Pasos (sem)</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:var(--accent)">${pasosDisplay}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px">Distancia</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px">${distSem} <span style="font-size:12px;font-weight:400;color:var(--text3)">km</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${numActs} actividad${numActs!==1?'es':''} · ${calSem} kcal</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px">Suplementos</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:${suppPct>=90?'var(--accent)':suppPct>=70?'var(--amber)':'var(--red)'}">${suppPct}<span style="font-size:14px;font-weight:400;color:var(--text3)">%</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">Dieta: ${dietaDias}/${dietaTotal} días</div>
+    </div>`;
+}
+
 function loadDay() {
   const data = loadData(), key = dateKey(currentDate), day = data[key]||{};
+  // Peso manual
+  document.getElementById('pesoInput').value = day.peso || '';
+  // Referencia báscula exportada
+  const pesoMap2 = {}; PESO_DATA.forEach(x => { pesoMap2[x.d] = x; });
+  const basiclaDato = pesoMap2[key];
+  document.getElementById('pesoRef').textContent = basiclaDato ? basiclaDato.p : '—';
+  // Notas
   document.getElementById('notas').value = day.notas||'';
+  // Dieta
   dietOK = day.dietOK !== undefined ? day.dietOK : true;
   const el = document.getElementById('dietToggle');
   el.className = 'diet-toggle ' + (dietOK?'ok':'skip');
@@ -783,14 +871,7 @@ function loadDay() {
   document.getElementById('dietPill').textContent = dietOK?'OK':'Saltada';
   missedSupps = new Set(day.missedSupps||[]);
   renderSupps();
-  // Show today's scale data
-  const todayKey2 = dateKey(currentDate);
-  const pesoMap2 = {}; PESO_DATA.forEach(x => { pesoMap2[x.d] = x; });
-  const todayPeso = pesoMap2[todayKey2] || PESO_DATA[0];
-  if (document.getElementById('pesoVal')) {
-    document.getElementById('pesoVal').textContent = todayPeso?.p || '—';
-
-  }
+  renderWeekSummary();
 }
 loadDay();
 
@@ -867,27 +948,36 @@ function renderStats() {
   const dates = [];
   for (let i=currentPeriod-1;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); dates.push(dateKey(d)); }
   const labels = dates.map(d=>new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
-  // Use PESO_DATA (scale) as source of truth for weight
-  const pesoMap = {}; PESO_DATA.forEach(x => { pesoMap[x.d] = x; });
-  const pesoArr = dates.map(d => pesoMap[d]?.p || null);
-
   const avg = arr => { const v=arr.filter(x=>x!==null); return v.length?parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)):null; };
 
-  const pesoActual = PESO_DATA[0]?.p || '—';
-  const pesoMin2026 = Math.min(...PESO_DATA.map(x=>x.p));
-  const pesoMax2026 = Math.max(...PESO_DATA.map(x=>x.p));
-  document.getElementById('statsCards').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Peso actual</div><div class="stat-val">${pesoActual} <span>kg</span></div><div class="stat-trend">media ${avg(pesoArr)||'—'} kg</div></div>
-    <div class="stat-card"><div class="stat-label">Mín/Máx 2026</div><div class="stat-val">${pesoMin2026} <span>kg</span></div><div class="stat-trend">máx ${pesoMax2026} kg</div></div>
-    <div class="stat-card"><div class="stat-label">FC reposo</div><div class="stat-val">53 <span>ppm</span></div><div class="stat-trend warn">+7 vs mínimo</div></div>
-    <div class="stat-card"><div class="stat-label">Sueño (sem)</div><div class="stat-val">6h <span>51m</span></div><div class="stat-trend">-17m vs mes</div></div>`;
+  // Peso: combinar entradas manuales (localStorage) + PESO_DATA (báscula exportada)
+  // PESO_DATA está en orden DESC (más reciente primero) → ordenar ASC para graficar
+  const pesoDataAsc = [...PESO_DATA].sort((a,b) => a.d.localeCompare(b.d));
+  const cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - currentPeriod);
+  const cutoffStr = dateKey(cutoffDate);
 
-  // Peso chart: use PESO_DATA sorted asc, filter by period
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - currentPeriod);
-  const cutoffStr = dateKey(cutoff);
-  const pesoFiltered = [...PESO_DATA].reverse().filter(x => x.d >= cutoffStr);
+  // Combinar: manual tiene prioridad sobre báscula exportada
+  const allPesoMap = {};
+  pesoDataAsc.forEach(x => { allPesoMap[x.d] = x.p; }); // báscula
+  Object.keys(data).forEach(k => { if (data[k].peso) allPesoMap[k] = data[k].peso; }); // manual override
+
+  // Filtrar por periodo y ordenar
+  const pesoFiltered = Object.keys(allPesoMap)
+    .filter(d => d >= cutoffStr)
+    .sort()
+    .map(d => ({ d, p: allPesoMap[d] }));
+
   const pesoChartLabels = pesoFiltered.map(x => new Date(x.d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
   const pesoChartData = pesoFiltered.map(x => x.p);
+  const pesoActual = pesoFiltered.length ? pesoFiltered[pesoFiltered.length-1].p : '—';
+  const pesoMin = pesoFiltered.length ? Math.min(...pesoFiltered.map(x=>x.p)) : '—';
+  const pesoMax = pesoFiltered.length ? Math.max(...pesoFiltered.map(x=>x.p)) : '—';
+
+  document.getElementById('statsCards').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Peso actual</div><div class="stat-val">${pesoActual} <span>kg</span></div><div class="stat-trend">media ${avg(pesoChartData)||'—'} kg</div></div>
+    <div class="stat-card"><div class="stat-label">Mín / Máx</div><div class="stat-val">${pesoMin} <span>kg</span></div><div class="stat-trend">máx ${pesoMax} kg</div></div>
+    <div class="stat-card"><div class="stat-label">FC reposo</div><div class="stat-val">53 <span>ppm</span></div><div class="stat-trend warn">+7 vs mínimo</div></div>
+    <div class="stat-card"><div class="stat-label">Sueño (sem)</div><div class="stat-val">6h <span>51m</span></div><div class="stat-trend">-17m vs mes</div></div>`;
   dc('chartPeso');
   charts['chartPeso'] = new Chart(document.getElementById('chartPeso'), {
     type:'line',
