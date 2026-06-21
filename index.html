@@ -215,7 +215,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI'
 
   <div class="nav">
     <button class="nav-btn active" onclick="showTab('registro',this)">Registro</button>
-    <button class="nav-btn" onclick="showTab('garmin',this)">Garmin</button>
+    <button class="nav-btn" onclick="showTab('garmin',this)">Actividades</button>
     <button class="nav-btn" onclick="showTab('sueno',this)">Sueño</button>
     <button class="nav-btn" onclick="showTab('suplementos',this)">Suplementos</button>
     <button class="nav-btn" onclick="showTab('stats',this)">Estadísticas</button>
@@ -265,8 +265,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI'
     <button class="save-btn" onclick="saveDay()">Guardar día</button>
   </div>
 
-  <!-- ===== GARMIN ===== -->
+  <!-- ===== ACTIVIDADES ===== -->
   <div id="tab-garmin" class="section">
+
+    <!-- IMPORTAR POR FOTO -->
+    <div class="card" id="importCard">
+      <div class="card-title">Importar actividad</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.5">
+        Haz 2 capturas en Garmin Connect (Resumen + Estadísticas) y súbelas aquí. Claude extraerá los datos automáticamente.
+      </div>
+      <div id="importDropzone" style="border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:all 0.15s" onclick="document.getElementById('importFileInput').click()">
+        <div style="font-size:28px;margin-bottom:6px">📸</div>
+        <div style="font-size:14px;color:var(--text2);font-weight:500">Seleccionar capturas de Garmin</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">1 o 2 imágenes · Resumen y/o Estadísticas</div>
+      </div>
+      <input type="file" id="importFileInput" accept="image/*" multiple style="display:none" onchange="handleImportFiles(this.files)">
+      <div id="importPreviews" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"></div>
+      <button id="importBtn" onclick="runImport()" style="display:none;width:100%;margin-top:10px;padding:13px;background:var(--accent);color:#0f0f0f;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        Extraer datos con IA
+      </button>
+      <div id="importStatus" style="margin-top:10px;font-size:13px;color:var(--text3);display:none"></div>
+      <div id="importResult" style="margin-top:10px;display:none"></div>
+    </div>
 
     <div class="score-card">
       <div class="score-ring">
@@ -690,42 +710,81 @@ renderSupps();
 
 function actIcon(type) { return type==='strength'?'💪':'🚶'; }
 
+function getAllActivities() {
+  // Merge hardcoded + imported from localStorage
+  const stored = loadData();
+  const imported = [];
+  Object.keys(stored).forEach(k => {
+    if (stored[k].activities) {
+      stored[k].activities.forEach(a => {
+        imported.push({
+          date: k,
+          type: a.tipo || 'walk',
+          title: a.titulo || 'Actividad',
+          dist: a.distancia_km || 0,
+          cal: a.calorias || 0,
+          time: a.tiempo_total || '—',
+          hr: a.fc_media || 0,
+          hrMax: a.fc_max || 0,
+          pasos: a.pasos || 0,
+          ritmo: a.ritmo_medio || null
+        });
+      });
+    }
+  });
+  // Merge: imported overrides hardcoded for same date+title
+  const importedKeys = new Set(imported.map(a => a.date+'|'+a.title));
+  const hardcoded = GARMIN_ACTIVITIES.filter(a => !importedKeys.has(a.date+'|'+a.title));
+  return [...imported, ...hardcoded].sort((a,b) => b.date.localeCompare(a.date));
+}
+
+function activityItemHTML(a) {
+  const metaParts = [a.time];
+  if (a.hr) metaParts.push(`FC ${a.hr}${a.hrMax?'–'+a.hrMax:''} ppm`);
+  if (a.ritmo) metaParts.push(a.ritmo);
+  if (a.pasos) metaParts.push(a.pasos.toLocaleString('es-ES')+' pasos');
+  return `<div class="activity-item">
+    <div class="activity-icon">${actIcon(a.type)}</div>
+    <div class="activity-info">
+      <div class="activity-name">${a.title}</div>
+      <div class="activity-meta">${metaParts.join(' · ')}</div>
+    </div>
+    <div class="activity-stat">
+      <div class="activity-dist">${a.dist>0?a.dist.toFixed(2)+' km':a.type==='strength'?'Fuerza':'—'}</div>
+      <div class="activity-cal">${a.cal?a.cal+' kcal':''}</div>
+    </div>
+  </div>`;
+}
+
 function renderTodayActivities() {
   const todayKey = dateKey(new Date());
-  const acts = GARMIN_ACTIVITIES.filter(a => a.date === todayKey);
+  const acts = getAllActivities().filter(a => a.date === todayKey);
   const el = document.getElementById('todayActivities');
   if (!el) return;
   if (!acts.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">Sin actividades registradas hoy</div>'; return; }
-  el.innerHTML = acts.map(a => `
-    <div class="activity-item">
-      <div class="activity-icon">${actIcon(a.type)}</div>
-      <div class="activity-info">
-        <div class="activity-name">${a.title}</div>
-        <div class="activity-meta">${a.time} · FC ${a.hr}–${a.hrMax} ppm</div>
-      </div>
-      <div class="activity-stat">
-        <div class="activity-dist">${a.dist>0?a.dist.toFixed(2)+' km':'—'}</div>
-        <div class="activity-cal">${a.cal} kcal</div>
-      </div>
-    </div>`).join('');
+  el.innerHTML = acts.map(activityItemHTML).join('');
 }
 renderTodayActivities();
 
 function renderRecentActivities() {
   const el = document.getElementById('recentActivities');
   if (!el) return;
-  el.innerHTML = GARMIN_ACTIVITIES.slice(0,10).map(a => {
+  const all = getAllActivities().slice(0, 12);
+  el.innerHTML = all.map(a => {
     const d = new Date(a.date+'T12:00:00');
     const label = d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    const metaParts = [label, a.time];
+    if (a.hr) metaParts.push('FC '+a.hr+' ppm');
+    if (a.ritmo) metaParts.push(a.ritmo);
     return `<div class="activity-item">
       <div class="activity-icon">${actIcon(a.type)}</div>
       <div class="activity-info">
         <div class="activity-name">${a.title}</div>
-        <div class="activity-meta">${label} · ${a.time} · FC ${a.hr} ppm</div>
+        <div class="activity-meta">${metaParts.join(' · ')}</div>
       </div>
       <div class="activity-stat">
-        <div class="activity-dist">${a.dist>0?a.dist.toFixed(2)+' km':'Fuerza'}</div>
-        <div class="activity-cal">${a.cal} kcal</div>
+        <div class="activity-dist">${a.dist>0?a.dist.toFixed(2)+' km':a.type==='strength'?'Fuerza':'—'}</div>
+        <div class="activity-cal">${a.cal?a.cal+' kcal':''}</div>
       </div>
     </div>`;
   }).join('');
@@ -808,8 +867,8 @@ function renderWeekSummary() {
   const lastPasos = PASOS_SEMANAL[PASOS_SEMANAL.length-1];
   const pasosDisplay = lastPasos ? (lastPasos.v/1000).toFixed(1)+'k' : '—';
 
-  // Actividades esta semana
-  const actsWeek = GARMIN_ACTIVITIES.filter(a => weekDays.includes(a.date));
+  // Actividades esta semana (hardcoded + importadas)
+  const actsWeek = getAllActivities().filter(a => weekDays.includes(a.date));
   const distSem = actsWeek.reduce((s,a) => s + a.dist, 0).toFixed(1);
   const calSem = actsWeek.reduce((s,a) => s + a.cal, 0);
   const numActs = actsWeek.length;
@@ -1067,6 +1126,182 @@ function showTab(tab, btn) {
   if (tab==='garmin') initGarminCharts();
   if (tab==='sueno') initSuenoCharts();
   if (tab==='logros') renderLogros();
+}
+
+// ─── IMPORTAR ACTIVIDAD POR FOTO ─────────────────────────────────────────────
+
+let importFiles = [];
+
+function handleImportFiles(files) {
+  importFiles = Array.from(files).slice(0, 2);
+  const prev = document.getElementById('importPreviews');
+  prev.innerHTML = '';
+  importFiles.forEach(f => {
+    const url = URL.createObjectURL(f);
+    prev.innerHTML += `<img src="${url}" style="height:120px;border-radius:8px;border:1px solid var(--border);object-fit:cover">`;
+  });
+  const dz = document.getElementById('importDropzone');
+  dz.style.borderColor = 'var(--accent)';
+  dz.style.background = 'var(--accent-dim2)';
+  document.getElementById('importBtn').style.display = 'block';
+}
+
+async function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function runImport() {
+  if (!importFiles.length) return;
+  const btn = document.getElementById('importBtn');
+  const status = document.getElementById('importStatus');
+  const result = document.getElementById('importResult');
+
+  btn.textContent = 'Analizando…';
+  btn.disabled = true;
+  status.style.display = 'block';
+  status.textContent = '🔍 Claude está leyendo las capturas…';
+  result.style.display = 'none';
+
+  try {
+    // Build image content blocks
+    const imageBlocks = await Promise.all(importFiles.map(async f => ({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: f.type || 'image/jpeg',
+        data: await fileToBase64(f)
+      }
+    })));
+
+    const prompt = `Eres un extractor de datos de actividades Garmin. Analiza estas capturas de pantalla de Garmin Connect y extrae TODOS los datos disponibles.
+
+Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin bloques de código, sin backticks. El JSON debe tener esta estructura exacta:
+{
+  "fecha": "YYYY-MM-DD",
+  "tipo": "walk|run|strength|cycle|other",
+  "titulo": "nombre de la actividad",
+  "distancia_km": número o null,
+  "tiempo_total": "HH:MM:SS o MM:SS",
+  "tiempo_movimiento": "HH:MM:SS o MM:SS o null",
+  "calorias": número o null,
+  "fc_media": número o null,
+  "fc_max": número o null,
+  "ritmo_medio": "MM:SS /km o null",
+  "velocidad_media_kmh": número o null,
+  "cadencia_media": número o null,
+  "pasos": número o null,
+  "ascenso_m": número o null,
+  "training_effect_aerobico": número o null,
+  "training_effect_anaerobico": número o null,
+  "carga_ejercicio": número o null,
+  "beneficio_principal": "texto o null"
+}
+
+Si algún campo no aparece en las capturas, usa null. Para la fecha, si ves algo como "21 jun @ 06:15" y estamos en 2026, la fecha es "2026-06-21". Extrae TODOS los datos numéricos que veas.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [...imageBlocks, { type: 'text', text: prompt }]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const text = data.content.find(b => b.type === 'text')?.text || '';
+    let activity;
+    try {
+      activity = JSON.parse(text.trim());
+    } catch(e) {
+      // Try to extract JSON if there's extra text
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) activity = JSON.parse(match[0]);
+      else throw new Error('No se pudo parsear la respuesta: ' + text.slice(0,100));
+    }
+
+    // Save to localStorage
+    const stored = loadData();
+    const dateKey2 = activity.fecha || dateKey(new Date());
+    if (!stored[dateKey2]) stored[dateKey2] = {};
+    if (!stored[dateKey2].activities) stored[dateKey2].activities = [];
+    // Avoid duplicates by titulo+fecha
+    const exists = stored[dateKey2].activities.find(a => a.titulo === activity.titulo);
+    if (!exists) stored[dateKey2].activities.push(activity);
+    saveData(stored);
+
+    // Also update GARMIN_ACTIVITIES array in memory for immediate display
+    GARMIN_ACTIVITIES.unshift({
+      date: dateKey2,
+      type: activity.tipo === 'walk' ? 'walk' : activity.tipo === 'strength' ? 'strength' : activity.tipo,
+      title: activity.titulo || 'Actividad',
+      dist: activity.distancia_km || 0,
+      cal: activity.calorias || 0,
+      time: activity.tiempo_total || '—',
+      hr: activity.fc_media || 0,
+      hrMax: activity.fc_max || 0,
+      bb: 0
+    });
+
+    // Show result
+    status.style.display = 'none';
+    result.style.display = 'block';
+    result.innerHTML = `
+      <div style="background:var(--accent-dim2);border:1px solid rgba(200,245,62,0.2);border-radius:var(--radius-sm);padding:14px">
+        <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">✓ Actividad guardada · ${dateKey2}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;color:var(--text2)">
+          ${activity.titulo ? `<div><span style="color:var(--text3)">Actividad</span><br><strong style="color:var(--text)">${activity.titulo}</strong></div>` : ''}
+          ${activity.distancia_km ? `<div><span style="color:var(--text3)">Distancia</span><br><strong style="color:var(--accent)">${activity.distancia_km} km</strong></div>` : ''}
+          ${activity.tiempo_total ? `<div><span style="color:var(--text3)">Tiempo</span><br><strong style="color:var(--text)">${activity.tiempo_total}</strong></div>` : ''}
+          ${activity.calorias ? `<div><span style="color:var(--text3)">Calorías</span><br><strong style="color:var(--text)">${activity.calorias} kcal</strong></div>` : ''}
+          ${activity.fc_media ? `<div><span style="color:var(--text3)">FC media</span><br><strong style="color:var(--red)">${activity.fc_media} ppm</strong></div>` : ''}
+          ${activity.fc_max ? `<div><span style="color:var(--text3)">FC máx</span><br><strong style="color:var(--red)">${activity.fc_max} ppm</strong></div>` : ''}
+          ${activity.pasos ? `<div><span style="color:var(--text3)">Pasos</span><br><strong style="color:var(--text)">${activity.pasos.toLocaleString('es-ES')}</strong></div>` : ''}
+          ${activity.ritmo_medio ? `<div><span style="color:var(--text3)">Ritmo</span><br><strong style="color:var(--text)">${activity.ritmo_medio}</strong></div>` : ''}
+          ${activity.cadencia_media ? `<div><span style="color:var(--text3)">Cadencia</span><br><strong style="color:var(--text)">${activity.cadencia_media} ppm</strong></div>` : ''}
+          ${activity.ascenso_m ? `<div><span style="color:var(--text3)">Ascenso</span><br><strong style="color:var(--text)">${activity.ascenso_m} m</strong></div>` : ''}
+          ${activity.training_effect_aerobico ? `<div><span style="color:var(--text3)">TE aeróbico</span><br><strong style="color:var(--text)">${activity.training_effect_aerobico}</strong></div>` : ''}
+          ${activity.beneficio_principal ? `<div style="grid-column:1/-1"><span style="color:var(--text3)">Beneficio</span><br><strong style="color:var(--text)">${activity.beneficio_principal}</strong></div>` : ''}
+        </div>
+        <button onclick="resetImport()" style="margin-top:12px;width:100%;padding:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit">
+          Importar otra actividad
+        </button>
+      </div>`;
+
+    // Refresh today activities if date matches today
+    renderTodayActivities();
+    renderRecentActivities();
+
+  } catch(err) {
+    status.textContent = '✗ Error: ' + err.message;
+    status.style.color = 'var(--red)';
+  } finally {
+    btn.textContent = 'Extraer datos con IA';
+    btn.disabled = false;
+  }
+}
+
+function resetImport() {
+  importFiles = [];
+  document.getElementById('importPreviews').innerHTML = '';
+  document.getElementById('importBtn').style.display = 'none';
+  document.getElementById('importStatus').style.display = 'none';
+  document.getElementById('importResult').style.display = 'none';
+  const dz = document.getElementById('importDropzone');
+  dz.style.borderColor = '';
+  dz.style.background = '';
+  document.getElementById('importFileInput').value = '';
 }
 </script>
 </body>
