@@ -455,6 +455,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI'
     </div>
 
     <div class="card">
+      <div class="card-title">Pasos semanales</div>
+      <div class="chart-wrap"><canvas id="chartPasosStats"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Distancia semanal (km)</div>
+      <div class="chart-wrap"><canvas id="chartDistStats"></canvas></div>
+    </div>
+    <div class="card">
       <div class="card-title">Dieta carnívora — últimos 28 días</div>
       <div class="carnivore-cal" id="carnivoreCal"></div>
       <div class="cal-legend">
@@ -644,7 +652,7 @@ function formatDateLabel(d) {
   if (dateKey(d) === dateKey(yesterday)) return 'Ayer · ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
   return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
 }
-function changeDay(delta) { currentDate.setDate(currentDate.getDate()+delta); loadDay(); document.getElementById('dateLabel').textContent = formatDateLabel(currentDate); }
+function changeDay(delta) { currentDate = new Date(currentDate); currentDate.setDate(currentDate.getDate()+delta); loadDay(); document.getElementById('dateLabel').textContent = formatDateLabel(currentDate); }
 document.getElementById('dateLabel').textContent = formatDateLabel(currentDate);
 
 function toggleDiet() {
@@ -754,7 +762,6 @@ function saveDay() {
   const data = loadData();
   const key = dateKey(currentDate);
   data[key] = {
-    peso: parseFloat(document.getElementById('peso').value)||null,
     dietOK,
     missedSupps: [...missedSupps],
     notas: document.getElementById('notas').value
@@ -767,7 +774,6 @@ function saveDay() {
 
 function loadDay() {
   const data = loadData(), key = dateKey(currentDate), day = data[key]||{};
-  document.getElementById('peso').value = day.peso||'';
   document.getElementById('notas').value = day.notas||'';
   dietOK = day.dietOK !== undefined ? day.dietOK : true;
   const el = document.getElementById('dietToggle');
@@ -868,29 +874,64 @@ function renderStats() {
   const avg = arr => { const v=arr.filter(x=>x!==null); return v.length?parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)):null; };
 
   const pesoActual = PESO_DATA[0]?.p || '—';
-  const grasaActual = PESO_DATA[0]?.g || '—';
+  const pesoMin2026 = Math.min(...PESO_DATA.map(x=>x.p));
+  const pesoMax2026 = Math.max(...PESO_DATA.map(x=>x.p));
   document.getElementById('statsCards').innerHTML = `
     <div class="stat-card"><div class="stat-label">Peso actual</div><div class="stat-val">${pesoActual} <span>kg</span></div><div class="stat-trend">media ${avg(pesoArr)||'—'} kg</div></div>
-
+    <div class="stat-card"><div class="stat-label">Mín/Máx 2026</div><div class="stat-val">${pesoMin2026} <span>kg</span></div><div class="stat-trend">máx ${pesoMax2026} kg</div></div>
     <div class="stat-card"><div class="stat-label">FC reposo</div><div class="stat-val">53 <span>ppm</span></div><div class="stat-trend warn">+7 vs mínimo</div></div>
     <div class="stat-card"><div class="stat-label">Sueño (sem)</div><div class="stat-val">6h <span>51m</span></div><div class="stat-trend">-17m vs mes</div></div>`;
 
-  // For peso chart use more history when period is large
-  const pesoChartData = currentPeriod <= 30 ? pesoArr : 
-    PESO_DATA.slice(0, currentPeriod).reverse().map(x=>x.p);
-  const pesoChartLabels = currentPeriod <= 30 ? labels :
-    PESO_DATA.slice(0, currentPeriod).reverse().map(x => {
-      const d = new Date(x.d+'T12:00:00'); 
-      return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
-    });
+  // Peso chart: use PESO_DATA sorted asc, filter by period
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - currentPeriod);
+  const cutoffStr = dateKey(cutoff);
+  const pesoFiltered = [...PESO_DATA].reverse().filter(x => x.d >= cutoffStr);
+  const pesoChartLabels = pesoFiltered.map(x => new Date(x.d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
+  const pesoChartData = pesoFiltered.map(x => x.p);
   dc('chartPeso');
   charts['chartPeso'] = new Chart(document.getElementById('chartPeso'), {
     type:'line',
     data:{ labels:pesoChartLabels, datasets:[
-      { data:pesoChartData, borderColor:'#5aabff', backgroundColor:'rgba(90,171,255,0.07)', pointRadius:currentPeriod>30?1:3, tension:0.35, fill:true, spanGaps:true },
+      { data:pesoChartData, borderColor:'#5aabff', backgroundColor:'rgba(90,171,255,0.07)', pointRadius:3, pointBackgroundColor:'#5aabff', tension:0.35, fill:true, spanGaps:true },
       { data:movingAvg(pesoChartData,7), borderColor:'#c8f53e', borderDash:[5,3], pointRadius:0, tension:0.4, spanGaps:true, borderWidth:1.5 },
     ]},
-    options: baseOpts({ scales:{ x:{...baseOpts().scales.x}, y:{...baseOpts().scales.y, suggestedMin:60, suggestedMax:78} } })
+    options: baseOpts({ scales:{ x:{...baseOpts().scales.x}, y:{...baseOpts().scales.y, suggestedMin:61, suggestedMax:72} } })
+  });
+
+  // Pasos semanales chart — usar PASOS_SEMANAL filtrado por periodo
+  // Para el periodo seleccionado aproximamos con semanas: 7d=4sem, 30d=8sem, 90d=20sem
+  const nSemanas = currentPeriod <= 7 ? 4 : currentPeriod <= 30 ? 8 : 20;
+  const pasosSlice = [...PASOS_SEMANAL].slice(-nSemanas);
+  dc('chartPasosStats');
+  charts['chartPasosStats'] = new Chart(document.getElementById('chartPasosStats'), {
+    type:'bar',
+    data:{ labels: pasosSlice.map(x=>x.d),
+      datasets:[{ data: pasosSlice.map(x=>x.v),
+        backgroundColor: pasosSlice.map(x=>x.v>=80000?'rgba(200,245,62,0.65)':'rgba(90,171,255,0.5)'),
+        borderRadius:4, borderSkipped:false }]},
+    options: baseOpts({ scales:{ x:{...baseOpts().scales.x}, y:{...baseOpts().scales.y,
+      ticks:{...baseOpts().scales.y.ticks, callback:v=>(v/1000).toFixed(0)+'k'} } } })
+  });
+
+  // Distancia por actividad Garmin — agrupar por fecha
+  const distMap = {};
+  GARMIN_ACTIVITIES.forEach(a => {
+    if (a.dist > 0) distMap[a.date] = (distMap[a.date]||0) + a.dist;
+  });
+  const cutoffDist = new Date(); cutoffDist.setDate(cutoffDist.getDate() - currentPeriod);
+  const cutoffDistStr = dateKey(cutoffDist);
+  const distDates = Object.keys(distMap).filter(d=>d>=cutoffDistStr).sort();
+  const distLabels = distDates.map(d=>new Date(d+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'}));
+  const distVals = distDates.map(d=>parseFloat(distMap[d].toFixed(2)));
+  dc('chartDistStats');
+  charts['chartDistStats'] = new Chart(document.getElementById('chartDistStats'), {
+    type:'bar',
+    data:{ labels: distLabels,
+      datasets:[{ data: distVals,
+        backgroundColor:'rgba(240,169,64,0.6)',
+        borderRadius:4, borderSkipped:false }]},
+    options: baseOpts({ scales:{ x:{...baseOpts().scales.x}, y:{...baseOpts().scales.y,
+      ticks:{...baseOpts().scales.y.ticks, callback:v=>v+'km'} } } })
   });
 
   renderCarnivoreCalendar();
