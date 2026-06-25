@@ -414,9 +414,6 @@ const SUPLS = [
     {id:'nac',n:'NAC',d:'600mg'},
     {id:'carn',n:'L-Carnitina Tartrato Carnipure',d:'—'}
   ]},
-  {grupo:'Durante el día', items:[
-    {id:'kcl',n:'LoSalt / KCl en infusiones',d:'—'}
-  ]},
   {grupo:'Antes de dormir', items:[
     {id:'mg',n:'Mg bisglicinato 200mg + B6',d:'—'},
     {id:'ashw',n:'KSM-66 Ashwagandha',d:'—'},
@@ -877,11 +874,73 @@ function renderStats(){
   const nActsPeriod=allActsPeriod.length;
   const periodLabel=currentPeriod==='year'?'año '+new Date().getFullYear():'últimos '+currentPeriod+'d';
 
+  // Calcular medias y récords semanales/mensuales
+  const allActsAll = [...GARMIN.acts, ...Object.entries(ld()).flatMap(([f,d])=>(d.actividades||[]).map(a=>({...a,fecha:f})))];
+  // Agrupar por semana ISO para récords
+  function isoWeek(dateStr){const d=new Date(dateStr+'T12:00:00');const day=d.getDay()||7;d.setDate(d.getDate()+4-day);const y=d.getFullYear();const w1=new Date(y,0,4);return y+'W'+String(Math.ceil(((d-w1)/86400000+1)/7)).padStart(2,'0');}
+  function isoMonth(dateStr){return dateStr.slice(0,7);}
+  const byWeek={},byMonth={};
+  allActsAll.forEach(a=>{
+    const wk=isoWeek(a.fecha),mo=isoMonth(a.fecha);
+    if(!byWeek[wk]) byWeek[wk]={dist:0,cal:0,pasos:0,n:0};
+    byWeek[wk].dist+=(+a.dist||0); byWeek[wk].cal+=(+a.cal||0); byWeek[wk].pasos+=(+a.pasos||0); byWeek[wk].n++;
+    if(!byMonth[mo]) byMonth[mo]={dist:0,cal:0,pasos:0,n:0};
+    byMonth[mo].dist+=(+a.dist||0); byMonth[mo].cal+=(+a.cal||0); byMonth[mo].pasos+=(+a.pasos||0); byMonth[mo].n++;
+  });
+  const weekVals=Object.values(byWeek), monthVals=Object.values(byMonth);
+  const avgW=arr=>{const v=arr.filter(x=>x>0);return v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):0;};
+  const recDistW=weekVals.length?Math.max(...weekVals.map(w=>w.dist)).toFixed(1):0;
+  const recDistM=monthVals.length?Math.max(...monthVals.map(m=>m.dist)).toFixed(1):0;
+  const recKmW=GARMIN.pasosSemanales.length?Math.max(...weekVals.map(w=>w.dist)).toFixed(1):0;
+  const mediaDistW=avgW(weekVals.map(w=>w.dist));
+  const mediaDistM=avgW(monthVals.map(m=>m.dist));
+  const mediaPasosW=Math.round(avgW(weekVals.map(w=>w.pasos)));
+  const mediaPasosM=Math.round(avgW(monthVals.map(m=>m.pasos)));
+  const recPasosW=GARMIN.pasosSemanales.length?Math.max(...GARMIN.pasosSemanales.map(w=>w.v)).toLocaleString('es-ES'):'—';
+
   document.getElementById('statsCards').innerHTML=`
     <div class="scard"><div class="slbl">Peso medio</div><div class="sval">${avg(pesoArr)||'—'}<span> kg</span></div><div class="ssub">${periodLabel}</div></div>
     <div class="scard"><div class="slbl">FC reposo actual</div><div class="sval">${fcActual}<span> ppm</span></div><div class="ssub">semana 15 Jun</div></div>
-    <div class="scard"><div class="slbl">Pasos ${periodLabel}</div><div class="sval">${totalPasosPeriod>0?(totalPasosPeriod/1000).toFixed(1)+'<span>k</span>':'—'}</div><div class="ssub">${nActsPeriod} actividades</div></div>
-    <div class="scard"><div class="slbl">Km ${periodLabel}</div><div class="sval">${totalKmPeriod>0?totalKmPeriod.toFixed(1):'—'}<span> km</span></div><div class="ssub">${nActsPeriod} actividades</div></div>`;
+    <div class="scard" style="grid-column:span 2">
+      <div class="slbl" style="margin-bottom:8px">Distancia</div>
+      <div style="display:flex;gap:0;flex-wrap:wrap">
+        <div style="flex:1;min-width:80px;padding-right:12px;border-right:.5px solid var(--bd)">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:2px">Esta semana</div>
+          <div style="font-size:20px;font-weight:700;line-height:1">${allActsPeriod.filter(a=>a.fecha>=(()=>{const s=new Date();s.setDate(s.getDate()-s.getDay()+(s.getDay()===0?-6:1));return dk(s);})()).reduce((s,a)=>s+(+a.dist||0),0).toFixed(1)}<span style="font-size:12px;font-weight:400;color:var(--t3)"> km</span></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">media <b style="color:var(--t2)">${mediaDistW} km</b> · récord <b style="color:#1D9E75">${recDistW} km</b></div>
+        </div>
+        <div style="flex:1;min-width:80px;padding:0 12px;border-right:.5px solid var(--bd)">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:2px">Este mes</div>
+          <div style="font-size:20px;font-weight:700;line-height:1">${allActsAll.filter(a=>a.fecha>=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-01').reduce((s,a)=>s+(+a.dist||0),0).toFixed(1)}<span style="font-size:12px;font-weight:400;color:var(--t3)"> km</span></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">media <b style="color:var(--t2)">${mediaDistM} km</b> · récord <b style="color:#1D9E75">${recDistM} km</b></div>
+        </div>
+        <div style="flex:1;min-width:80px;padding-left:12px">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:2px">Año ${new Date().getFullYear()}</div>
+          <div style="font-size:20px;font-weight:700;line-height:1">${allActsAll.filter(a=>a.fecha>=new Date().getFullYear()+'-01-01').reduce((s,a)=>s+(+a.dist||0),0).toFixed(0)}<span style="font-size:12px;font-weight:400;color:var(--t3)"> km</span></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">${allActsAll.filter(a=>a.fecha>=new Date().getFullYear()+'-01-01').length} actividades</div>
+        </div>
+      </div>
+    </div>
+    <div class="scard" style="grid-column:span 2">
+      <div class="slbl" style="margin-bottom:8px">Pasos</div>
+      <div style="display:flex;gap:0;flex-wrap:wrap">
+        <div style="flex:1;min-width:80px;padding-right:12px;border-right:.5px solid var(--bd)">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:2px">Esta semana</div>
+          <div style="font-size:20px;font-weight:700;line-height:1">${(()=>{const s=new Date();s.setDate(s.getDate()-s.getDay()+(s.getDay()===0?-6:1));return allActsAll.filter(a=>a.fecha>=dk(s)).reduce((t,a)=>t+(+a.pasos||0),0).toLocaleString('es-ES');})()}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">media <b style="color:var(--t2)">${mediaPasosW.toLocaleString('es-ES')}</b> · récord <b style="color:#1D9E75">${recPasosW}</b></div>
+        </div>
+        <div style="flex:1;min-width:80px;padding:0 12px;border-right:.5px solid var(--bd)">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:2px">Este mes</div>
+          <div style="font-size:20px;font-weight:700;line-height:1">${allActsAll.filter(a=>a.fecha>=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-01').reduce((t,a)=>t+(+a.pasos||0),0).toLocaleString('es-ES')}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">media <b style="color:var(--t2)">${mediaPasosM.toLocaleString('es-ES')}</b> / sem</div>
+        </div>
+        <div style="flex:1;min-width:80px;padding-left:12px">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:2px">Año ${new Date().getFullYear()}</div>
+          <div style="font-size:20px;font-weight:700;line-height:1">${(allActsAll.filter(a=>a.fecha>=new Date().getFullYear()+'-01-01').reduce((t,a)=>t+(+a.pasos||0),0)/1000).toFixed(0)}<span style="font-size:12px;font-weight:400;color:var(--t3)">k</span></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">pasos totales</div>
+        </div>
+      </div>
+    </div>`;
 
   dc('cPeso');
   charts['cPeso']=new Chart(document.getElementById('cPeso'),{type:'line',data:{labels:lbs,datasets:[
@@ -911,33 +970,101 @@ function renderStats(){
 // LOGROS
 // ════════════════════════════════════════════
 function renderLogros(){
+  const allActsAll=[...GARMIN.acts,...Object.entries(ld()).flatMap(([f,d])=>(d.actividades||[]).map(a=>({...a,fecha:f})))];
+
+  // ── Récords ──────────────────────────────
   const maxW=GARMIN.pasosSemanales.reduce((b,a)=>a.v>b.v?a:b);
   const minFC=GARMIN.fcReposo.reduce((b,v,i)=>v<b.v?{v,i}:b,{v:999,i:0});
-  const maxDist=GARMIN.acts.filter(a=>a.dist>0).reduce((b,a)=>a.dist>b.dist?a:b);
-  const maxCal=GARMIN.acts.reduce((b,a)=>a.cal>b.cal?a:b);
-  const maxAsc=GARMIN.acts.reduce((b,a)=>a.asc>b.asc?a:b);
+  const walkActs=allActsAll.filter(a=>a.dist>0);
+  const maxDist=walkActs.length?walkActs.reduce((b,a)=>a.dist>b.dist?a:b):null;
+  const maxCal=allActsAll.length?allActsAll.reduce((b,a)=>a.cal>b.cal?a:b):null;
+  const maxAsc=allActsAll.length?allActsAll.reduce((b,a)=>a.asc>b.asc?a:b):null;
+  // récord km semanales acumulados
+  function isoWeek2(s){const d=new Date(s+'T12:00:00');const dy=d.getDay()||7;d.setDate(d.getDate()+4-dy);const y=d.getFullYear();const w1=new Date(y,0,4);return y+'W'+String(Math.ceil(((d-w1)/86400000+1)/7)).padStart(2,'0');}
+  const distByWeek={};
+  allActsAll.forEach(a=>{const k=isoWeek2(a.fecha);distByWeek[k]=(distByWeek[k]||0)+(+a.dist||0);});
+  const recDistW=Object.values(distByWeek).length?Math.max(...Object.values(distByWeek)).toFixed(1):'—';
 
-  document.getElementById('logrRec').innerHTML=`<div class="ctitle">Récords — Garmin</div>
-    <div class="sr"><div><span class="sname">Semana más activa</span><div style="font-size:11px;color:var(--t3);margin-top:1px">Sem. ${maxW.w}</div></div><span class="sval2 good">${maxW.v.toLocaleString('es-ES')} pasos</span></div>
-    <div class="sr"><div><span class="sname">FC reposo mínima histórica</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${GARMIN.fcReposoLabels[minFC.i]}</div></div><span class="sval2 good">${minFC.v} ppm</span></div>
-    <div class="sr"><div><span class="sname">Mayor distancia actividad</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${maxDist.fecha}</div></div><span class="sval2 good">${(+maxDist.dist).toFixed(2)} km</span></div>
-    <div class="sr"><div><span class="sname">Más calorías en actividad</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${maxCal.fecha}</div></div><span class="sval2 good">${maxCal.cal} kcal</span></div>
-    <div class="sr"><div><span class="sname">Mayor ascenso actividad</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${maxAsc.fecha}</div></div><span class="sval2 good">${maxAsc.asc} m</span></div>`;
+  // ── Actividad reciente ────────────────────
+  const today=new Date(),yk=today.getFullYear()+'-01-01';
+  const weekStart=new Date();weekStart.setDate(today.getDate()-today.getDay()+(today.getDay()===0?-6:1));
+  const wk=dk(weekStart);
+  const mk=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-01';
+  const actsY=allActsAll.filter(a=>a.fecha>=yk),actsM=allActsAll.filter(a=>a.fecha>=mk),actsW=allActsAll.filter(a=>a.fecha>=wk);
+  const sumD=arr=>arr.reduce((s,a)=>s+(+a.dist||0),0);
+  const sumC=arr=>arr.reduce((s,a)=>s+(+a.cal||0),0);
+  const sumP=arr=>arr.reduce((s,a)=>s+(+a.pasos||0),0);
 
-  const data=ld(), keys=Object.keys(data);
+  // ── Suplementos ───────────────────────────
+  const data=ld(), keys=Object.keys(data).sort();
   const allIds=SUPLS.flatMap(g=>g.items.map(s=>s.id));
   const suplNames=Object.fromEntries(SUPLS.flatMap(g=>g.items.map(s=>[s.id,s.n])));
   const daysWithSupl=keys.filter(k=>data[k].suplMissed!==undefined);
-  const adh=allIds.map(id=>{
-    if(!daysWithSupl.length) return {id,pct:100};
-    const miss=daysWithSupl.filter(k=>(data[k].suplMissed||[]).includes(id)).length;
-    return {id,pct:Math.round(((daysWithSupl.length-miss)/daysWithSupl.length)*100)};
-  }).sort((a,b)=>a.pct-b.pct);
-  const media=Math.round(adh.reduce((s,a)=>s+a.pct,0)/adh.length);
+  const todayK=dk(today);
+  const d7start=dk(new Date(Date.now()-6*864e5));
+  const d30start=dk(new Date(Date.now()-29*864e5));
+  const d7days=daysWithSupl.filter(k=>k>=d7start&&k<=todayK);
+  const d30days=daysWithSupl.filter(k=>k>=d30start&&k<=todayK);
+  const yearStart=today.getFullYear()+'-01-01';
+  const dyears=daysWithSupl.filter(k=>k>=yearStart);
 
-  document.getElementById('logrSupl').innerHTML=`<div class="ctitle">Adherencia suplementos${daysWithSupl.length?` (${daysWithSupl.length}d registrados)`:' — sin datos aún'}</div>
-    ${adh.slice(0,5).map(s=>`<div class="sr"><span class="sname">${suplNames[s.id]}</span><span class="sval2 ${s.pct>=80?'good':''}">${s.pct}%</span></div>`).join('')}
-    <div class="sr"><span class="sname" style="color:var(--t3);font-size:13px">Media general</span><span class="sval2 good">${media}%</span></div>`;
+  function adhRate(id,arr){
+    if(!arr.length) return null;
+    const miss=arr.filter(k=>(data[k].suplMissed||[]).includes(id)).length;
+    return Math.round(((arr.length-miss)/arr.length)*100);
+  }
+  function dotColor(pct){if(pct===null)return'var(--ibd)';if(pct>=90)return'#1D9E75';if(pct>=70)return'#fb923c';return'#E24B4A';}
+
+  const adh=allIds.map(id=>({id,
+    w:adhRate(id,d7days),
+    m:adhRate(id,d30days),
+    y:adhRate(id,dyears)
+  }));
+  const mediaGlobal=adh.length?Math.round(adh.map(s=>s.y??100).reduce((a,b)=>a+b,0)/adh.length):100; // kept for possible future use
+
+  document.getElementById('logrRec').innerHTML=`
+    <div class="ctitle">Actividad — resumen</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px">
+      ${[['Esta sem.',actsW],[`Jun ${today.getFullYear()}`,actsM],[`Año ${today.getFullYear()}`,actsY]].map(([lbl,arr])=>`
+      <div style="background:var(--grbg);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:6px">${lbl}</div>
+        <div style="font-size:18px;font-weight:700;line-height:1;color:var(--t1)">${sumD(arr).toFixed(1)}<span style="font-size:11px;font-weight:400;color:var(--t3)"> km</span></div>
+        <div style="font-size:10px;color:var(--t3);margin-top:4px">${sumC(arr).toLocaleString('es-ES')} kcal</div>
+        <div style="font-size:10px;color:var(--t3)">${(sumP(arr)/1000).toFixed(1)}k pasos</div>
+        <div style="font-size:10px;color:var(--t3)">${arr.length} act.</div>
+      </div>`).join('')}
+    </div>
+    <div class="ctitle" style="margin-top:14px">Récords personales</div>
+    ${[
+      ['🏅 Semana más pasos', maxW.v.toLocaleString('es-ES')+' pasos', 'Sem. '+maxW.w],
+      ['🏅 Semana más km', recDistW+' km', 'todas las semanas'],
+      ['❤️ FC reposo mínima', minFC.v+' ppm', GARMIN.fcReposoLabels[minFC.i]],
+      maxDist?['📍 Mayor distancia actividad', (+maxDist.dist).toFixed(2)+' km', maxDist.fecha]:null,
+      maxCal?['🔥 Más calorías actividad', maxCal.cal+' kcal', maxCal.fecha]:null,
+      maxAsc?['⛰️ Mayor ascenso actividad', maxAsc.asc+' m', maxAsc.fecha]:null,
+    ].filter(Boolean).map(([nom,val,sub])=>`
+    <div class="sr">
+      <div><span class="sname">${nom}</span><div style="font-size:11px;color:var(--t3);margin-top:1px">${sub}</div></div>
+      <span class="sval2 good">${val}</span>
+    </div>`).join('')}`;
+
+  document.getElementById('logrSupl').innerHTML=`
+    <div class="ctitle">Adherencia suplementos${daysWithSupl.length?` — ${daysWithSupl.length}d registrados`:' — sin datos aún'}</div>
+    <div style="display:grid;grid-template-columns:1fr 42px 42px 42px;gap:4px;align-items:center;margin-bottom:6px">
+      <div style="font-size:10px;color:var(--t3)">Suplemento</div>
+      <div style="font-size:10px;color:var(--t3);text-align:center">7d</div>
+      <div style="font-size:10px;color:var(--t3);text-align:center">30d</div>
+      <div style="font-size:10px;color:var(--t3);text-align:center">Año</div>
+    </div>
+    ${adh.map(s=>`
+    <div style="display:grid;grid-template-columns:1fr 42px 42px 42px;gap:4px;align-items:center;padding:7px 0;border-bottom:.5px solid var(--bd)">
+      <span class="sname" style="font-size:13px">${suplNames[s.id]}</span>
+      ${[s.w,s.m,s.y].map(p=>`<div style="text-align:center;font-size:13px;font-weight:600;color:${dotColor(p)}">${p!==null?p+'%':'—'}</div>`).join('')}
+    </div>`).join('')}
+    <div style="display:grid;grid-template-columns:1fr 42px 42px 42px;gap:4px;align-items:center;padding:8px 0 2px">
+      <span style="font-size:12px;color:var(--t3)">Media general</span>
+      ${[d7days,d30days,dyears].map(ms=>{const tot=ms.length;const totMiss=allIds.reduce((s,id)=>s+(ms.filter(k=>(data[k].suplMissed||[]).includes(id)).length),0);const pct=tot?Math.round(((tot*allIds.length-totMiss)/(tot*allIds.length))*100):null;return `<div style="text-align:center;font-size:13px;font-weight:700;color:${dotColor(pct)}">${pct!==null?pct+'%':'—'}</div>`;}).join('')}
+    </div>`;
 }
 
 // ════════════════════════════════════════════
