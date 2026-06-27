@@ -159,9 +159,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="hdr-sub">A Coruña · 43 años</div>
     </div>
     <div class="dnav">
-      <button class="dbtn" onclick="changeDay(-1)">‹</button>
+      <button class="dbtn" id="btnPrev">‹</button>
       <span class="dlbl" id="dateLabel"></span>
-      <button class="dbtn" onclick="changeDay(1)">›</button>
+      <button class="dbtn" id="btnNext">›</button>
     </div>
   </div>
 
@@ -1102,6 +1102,8 @@ function showTab(tab,btn){
 })();
 
 setupProxy();
+document.getElementById('btnPrev').addEventListener('click', function(e){ e.stopPropagation(); changeDay(-1); });
+document.getElementById('btnNext').addEventListener('click', function(e){ e.stopPropagation(); changeDay(1); });
 document.getElementById('dateLabel').textContent=fmtDate(currentDate);
 renderResumenSemana();
 loadDay();
