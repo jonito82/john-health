@@ -438,7 +438,7 @@ let suplMissed = new Set();
 let apiCallbacks = {};
 let apiCallId = 0;
 
-function dk(d){ return d.toISOString().split('T')[0]; }
+function dk(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function ld(){ try{ return JSON.parse(localStorage.getItem('jh')||'{}'); } catch(e){ return {}; } }
 function sd(d){ localStorage.setItem('jh', JSON.stringify(d)); }
 function toast(msg='✓ Guardado'){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
