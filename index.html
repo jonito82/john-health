@@ -470,12 +470,18 @@ async function callAPI(payload) {
 // FECHA NAV
 // ════════════════════════════════════════════
 function fmtDate(d){
-  const t=new Date(), y=new Date(t); y.setDate(t.getDate()-1);
-  if(dk(d)===dk(t)) return 'Hoy · '+d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
-  if(dk(d)===dk(y)) return 'Ayer · '+d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  const key=dk(d), todayKey=dk(new Date());
+  const y=new Date(); y.setDate(y.getDate()-1); const yKey=dk(y);
+  const label=d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  if(key===todayKey) return 'Hoy · '+label;
+  if(key===yKey) return 'Ayer · '+label;
   return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
 }
-function changeDay(delta){ currentDate=new Date(currentDate); currentDate.setDate(currentDate.getDate()+delta); loadDay(); document.getElementById('dateLabel').textContent=fmtDate(currentDate); }
+function changeDay(delta){
+  currentDate.setDate(currentDate.getDate()+delta);
+  document.getElementById('dateLabel').textContent=fmtDate(currentDate);
+  loadDay();
+}
 
 // ════════════════════════════════════════════
 // CARNÍVORA
