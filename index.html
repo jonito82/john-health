@@ -479,7 +479,10 @@ function fmtDate(d){
   return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
 }
 function changeDay(delta){
-  currentDate.setDate(currentDate.getDate()+delta);
+  const d=new Date(currentDate);
+  d.setDate(d.getDate()+delta);
+  currentDate=d;
+  suplMissed=new Set();
   document.getElementById('dateLabel').textContent=fmtDate(currentDate);
   loadDay();
   if(currentTab==='suplementos') renderSupl();
