@@ -96,18 +96,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .save-btn:active{opacity:.75}
 .export-btn{width:100%;padding:12px;background:var(--ibg);color:var(--t2);border:1px solid var(--ibd);border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:8px}
 
-/* SUPLEMENTOS */
-.sg-title{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px;margin-top:16px;padding-left:2px}
-.sg-title:first-child{margin-top:0}
-.sup{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--grbg);border:1px solid var(--grbd);margin-bottom:6px;cursor:pointer;transition:all .15s}
-.sup.miss{background:var(--rdbg);border-color:var(--rdbd)}
-.sup.miss .sn{text-decoration:line-through;color:var(--rd)}
-.sup.miss .sd{color:var(--rd);opacity:.7}
-.sup.miss .sc{color:var(--rd)}
-.sc{font-size:16px;flex-shrink:0;color:var(--gr)}
-.si{flex:1}
-.sn{font-size:14px;font-weight:500}
-.sd{font-size:12px;color:var(--t3);margin-top:2px}
 
 /* ESTADÍSTICAS */
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
@@ -168,7 +156,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="nav">
     <button class="nbtn active" onclick="showTab('registro',this)">Registro</button>
     <button class="nbtn" onclick="showTab('actividades',this)">Actividades</button>
-    <button class="nbtn" onclick="showTab('suplementos',this)">Suplementos</button>
     <button class="nbtn" onclick="showTab('stats',this)">Estadísticas</button>
     <button class="nbtn" onclick="showTab('logros',this)">Logros</button>
   </div>
@@ -258,14 +245,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 
-  <!-- ══════════ SUPLEMENTOS ══════════ -->
-  <div id="tab-suplementos" class="sec">
-    <div class="card">
-      <div class="ctitle">Stack del día — toca lo que hayas saltado</div>
-      <div id="supList"></div>
-    </div>
-    <button class="save-btn" onclick="saveSupl()">Guardar suplementos</button>
-  </div>
 
   <!-- ══════════ ESTADÍSTICAS ══════════ -->
   <div id="tab-stats" class="sec">
@@ -297,7 +276,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- ══════════ LOGROS ══════════ -->
   <div id="tab-logros" class="sec">
     <div class="card" id="logrRec"></div>
-    <div class="card" id="logrSupl"></div>
+
   </div>
 </div>
 
@@ -406,30 +385,6 @@ const PESO_2026 = [
   {f:'2026-06-19',v:62.0},{f:'2026-06-20',v:61.9}
 ];
 
-const SUPLS = [
-  {grupo:'En ayunas / mañana', items:[
-    {id:'crea',n:'Creapure® Creatina',d:'5g'},
-    {id:'vitC',n:'Vitamina C',d:'1g'},
-    {id:'ala',n:'Na-R-ALA',d:'300mg'},
-    {id:'cola',n:'Colágeno hidrolizado bovino',d:'10g'}
-  ]},
-  {grupo:'Comida principal (~13h)', items:[
-    {id:'om3',n:'Omega-3 TG IFOS',d:'—'},
-    {id:'d3k2',n:'D3 5000UI + K2 200mcg',d:'—'},
-    {id:'multi',n:'Multivitamínico (sin Fe ni I)',d:'—'},
-    {id:'coq',n:'CoQ10 200mg + BioPerine',d:'—'},
-    {id:'prob',n:'GI Biotics 100B',d:'—'},
-    {id:'nac',n:'NAC',d:'600mg'},
-    {id:'carn',n:'L-Carnitina Tartrato Carnipure',d:'—'}
-  ]},
-  {grupo:'Antes de dormir', items:[
-    {id:'mg',n:'Mg bisglicinato 200mg + B6',d:'—'},
-    {id:'ashw',n:'KSM-66 Ashwagandha',d:'—'},
-    {id:'ps',n:'Fosfatidilserina',d:'300mg'},
-    {id:'gly',n:'Glycine HSN',d:'5g'}
-  ]}
-];
-
 // ════════════════════════════════════════════
 // ESTADO
 // ════════════════════════════════════════════
@@ -438,7 +393,6 @@ let currentPeriod = 7;
 let charts = {};
 let selectedFiles = [];
 let carnivoreOn = false;
-let suplMissed = new Set();
 let apiCallbacks = {};
 let apiCallId = 0;
 
@@ -484,10 +438,8 @@ function changeDay(delta){
   const d=new Date(currentDate);
   d.setDate(d.getDate()+delta);
   currentDate=d;
-  suplMissed=new Set();
   document.getElementById('dateLabel').textContent=fmtDate(currentDate);
   loadDay();
-  if(currentTab==='suplementos') renderSupl();
 }
 
 // ════════════════════════════════════════════
@@ -688,33 +640,7 @@ async function extractGarmin(){
   btn.disabled=false; icon.textContent='✦'; txt.textContent='Extraer datos con IA';
 }
 
-// ════════════════════════════════════════════
-// SUPLEMENTOS
-// ════════════════════════════════════════════
-function renderSupl(){
-  const data=ld(), key=dk(currentDate);
-  suplMissed=new Set(data[key]?.suplMissed||[]);
-  document.getElementById('supList').innerHTML=SUPLS.map(g=>`
-    <div class="sg-title">${g.grupo}</div>
-    ${g.items.map(s=>`
-      <div class="sup ${suplMissed.has(s.id)?'miss':''}" id="sup-${s.id}" onclick="togSupl('${s.id}')">
-        <span class="sc">${suplMissed.has(s.id)?'✗':'✓'}</span>
-        <div class="si"><div class="sn">${s.n}</div><div class="sd">${s.d}</div></div>
-      </div>`).join('')}`).join('');
-}
-function togSupl(id){
-  if(suplMissed.has(id)) suplMissed.delete(id); else suplMissed.add(id);
-  const el=document.getElementById('sup-'+id);
-  const m=suplMissed.has(id);
-  el.className='sup '+(m?'miss':'');
-  el.querySelector('.sc').textContent=m?'✗':'✓';
-}
-function saveSupl(){
-  const data=ld(), key=dk(currentDate);
-  if(!data[key]) data[key]={};
-  data[key].suplMissed=[...suplMissed];
-  sd(data); toast();
-}
+
 
 // ════════════════════════════════════════════
 // CHART HELPERS
@@ -1013,32 +939,6 @@ function renderLogros(){
   const sumC=arr=>arr.reduce((s,a)=>s+(+a.cal||0),0);
   const sumP=arr=>arr.reduce((s,a)=>s+(+a.pasos||0),0);
 
-  // ── Suplementos ───────────────────────────
-  const data=ld(), keys=Object.keys(data).sort();
-  const allIds=SUPLS.flatMap(g=>g.items.map(s=>s.id));
-  const suplNames=Object.fromEntries(SUPLS.flatMap(g=>g.items.map(s=>[s.id,s.n])));
-  const daysWithSupl=keys.filter(k=>data[k].suplMissed!==undefined);
-  const todayK=dk(today);
-  const d7start=dk(new Date(Date.now()-6*864e5));
-  const d30start=dk(new Date(Date.now()-29*864e5));
-  const d7days=daysWithSupl.filter(k=>k>=d7start&&k<=todayK);
-  const d30days=daysWithSupl.filter(k=>k>=d30start&&k<=todayK);
-  const yearStart=today.getFullYear()+'-01-01';
-  const dyears=daysWithSupl.filter(k=>k>=yearStart);
-
-  function adhRate(id,arr){
-    if(!arr.length) return null;
-    const miss=arr.filter(k=>(data[k].suplMissed||[]).includes(id)).length;
-    return Math.round(((arr.length-miss)/arr.length)*100);
-  }
-  function dotColor(pct){if(pct===null)return'var(--ibd)';if(pct>=90)return'#1D9E75';if(pct>=70)return'#fb923c';return'#E24B4A';}
-
-  const adh=allIds.map(id=>({id,
-    w:adhRate(id,d7days),
-    m:adhRate(id,d30days),
-    y:adhRate(id,dyears)
-  }));
-  const mediaGlobal=adh.length?Math.round(adh.map(s=>s.y??100).reduce((a,b)=>a+b,0)/adh.length):100; // kept for possible future use
 
   document.getElementById('logrRec').innerHTML=`
     <div class="ctitle">Actividad — resumen</div>
@@ -1066,23 +966,6 @@ function renderLogros(){
       <span class="sval2 good">${val}</span>
     </div>`).join('')}`;
 
-  document.getElementById('logrSupl').innerHTML=`
-    <div class="ctitle">Adherencia suplementos${daysWithSupl.length?` — ${daysWithSupl.length}d registrados`:' — sin datos aún'}</div>
-    <div style="display:grid;grid-template-columns:1fr 42px 42px 42px;gap:4px;align-items:center;margin-bottom:6px">
-      <div style="font-size:10px;color:var(--t3)">Suplemento</div>
-      <div style="font-size:10px;color:var(--t3);text-align:center">7d</div>
-      <div style="font-size:10px;color:var(--t3);text-align:center">30d</div>
-      <div style="font-size:10px;color:var(--t3);text-align:center">Año</div>
-    </div>
-    ${adh.map(s=>`
-    <div style="display:grid;grid-template-columns:1fr 42px 42px 42px;gap:4px;align-items:center;padding:7px 0;border-bottom:.5px solid var(--bd)">
-      <span class="sname" style="font-size:13px">${suplNames[s.id]}</span>
-      ${[s.w,s.m,s.y].map(p=>`<div style="text-align:center;font-size:13px;font-weight:600;color:${dotColor(p)}">${p!==null?p+'%':'—'}</div>`).join('')}
-    </div>`).join('')}
-    <div style="display:grid;grid-template-columns:1fr 42px 42px 42px;gap:4px;align-items:center;padding:8px 0 2px">
-      <span style="font-size:12px;color:var(--t3)">Media general</span>
-      ${[d7days,d30days,dyears].map(ms=>{const tot=ms.length;const totMiss=allIds.reduce((s,id)=>s+(ms.filter(k=>(data[k].suplMissed||[]).includes(id)).length),0);const pct=tot?Math.round(((tot*allIds.length-totMiss)/(tot*allIds.length))*100):null;return `<div style="text-align:center;font-size:13px;font-weight:700;color:${dotColor(pct)}">${pct!==null?pct+'%':'—'}</div>`;}).join('')}
-    </div>`;
 }
 
 // ════════════════════════════════════════════
@@ -1096,7 +979,6 @@ function showTab(tab,btn){
   document.getElementById('tab-'+tab).classList.add('active');
   btn.classList.add('active');
   if(tab==='actividades') renderActividades();
-  if(tab==='suplementos') renderSupl();
   if(tab==='stats') renderStats();
   if(tab==='logros') renderLogros();
 }
